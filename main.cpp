@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -8,6 +9,20 @@ bool is_valid_date_format(const std::string& input) {
       return false;
    }
 
+   return true;
+}
+
+bool PerformQuery(
+   const std::string& observerName,
+   const std::string& targetName,
+   const std::string& occulterName,
+   const std::string& lowerEpoch,
+   const std::string& upperEpoch) {
+   // summarize our objective
+   std::cout << "Searching for occultations in the '" << observerName << "-"
+             << occulterName << "-" << targetName
+             << "' system in the time window between " << lowerEpoch << " and "
+             << upperEpoch << "." << std::endl;
    return true;
 }
 
@@ -31,14 +46,19 @@ int main() {
    std::cout << "Observer Name: ";
    std::string observerName = "";
    std::cin >> observerName;
+   std::transform(
+      observerName.begin(), observerName.end(), observerName.begin(), ::toupper);
 
    std::cout << "Target Name: ";
    std::string targetName = "";
    std::cin >> targetName;
+   std::transform(targetName.begin(), targetName.end(), targetName.begin(), ::toupper);
 
    std::cout << "Occulter Name: ";
    std::string occulterName = "";
    std::cin >> occulterName;
+   std::transform(
+      occulterName.begin(), occulterName.end(), occulterName.begin(), ::toupper);
 
    // next, let's retrieve the epochs which define our bounds
    std::cout << "Lower Bound Epoch (YYYY-MMM-DD): ";
@@ -61,8 +81,8 @@ int main() {
       return 1;
    }
 
-   std::cout << "Searching for occultations in the " << observerName << "-"
-             << occulterName << "-" << targetName << " system in the range between "
-             << startEpoch << " and " << endEpoch << "." << std::endl;
+   // execute the query:
+   return PerformQuery(observerName, targetName, occulterName, startEpoch, endEpoch);
+
    return 0;
 }
