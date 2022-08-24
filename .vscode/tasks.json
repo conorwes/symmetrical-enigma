@@ -10,7 +10,9 @@
                 "/nologo",
                 "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "${file}",
-                "D:/Repositories/cspice/lib/cspice.lib"
+                "-I",
+                "D:\\Repositories\\cspice\\cspice\\include",
+                "${workspaceFolder}\\cspice_dll.lib"
             ],
             "options": {
                 "cwd": "${fileDirname}"

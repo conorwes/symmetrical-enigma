@@ -80,18 +80,14 @@ bool PerformQuery(
       &result);
 
    if (gfbail_c()) {
-      /*
-      Clear the CSPICE interrupt indication. This is
-      an essential step for programs that continue
-      running after an interrupt;
-      gfbail_c will continue to return SPICETRUE until this step has been
-            performed.*/
+      /* Clear the CSPICE interrupt indication. This is an essential step for programs
+       * that continue running after an interrupt; gfbail_c will continue to return
+       * SPICETRUE until this step has been performed.*/
       gfclrh_c();
 
-      /*We've trapped an interrupt signal. In a realistic application,
-         the program
-            would continue operation from this point.In this simple example,
-         we simply display a message and                            quit.*/
+      /*We've trapped an interrupt signal. In a realistic application, the program would
+       * continue operation from this point. In this simple example, we simply display a
+       * message and quit.*/
       std::cout << "\nSearch was interrupted.\n\nThis message "
                    "was written after an interrupt signal\n"
                    "was trapped. By default, the program "

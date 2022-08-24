@@ -1,11 +1,10 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Win64",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:/Repositories/cspice/include/",
-                "D:/Repositories/cspice/lib/"
+                "D:/Repositories/cspice/cspice/include/"
             ],
             "defines": [
                 "_DEBUG",
