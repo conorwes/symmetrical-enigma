@@ -50,7 +50,9 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "zzfcstring.c": "cpp",
+        "bodc2n_c.c": "cpp"
     },
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
