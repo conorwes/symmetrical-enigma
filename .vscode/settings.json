@@ -56,5 +56,10 @@
     },
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "C_Cpp.clang_format_style": "file"
+    "C_Cpp.clang_format_style": "file",
+    "files.exclude": {
+        "**/*.obj": true,
+        "**/*.ilk": true,
+        "**/*.pdb": true
+    }
 }
