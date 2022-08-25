@@ -3,8 +3,10 @@
         {
             "name": "Win64",
             "includePath": [
-                "${workspaceFolder}/**",
-                "D:/Repositories/cspice/cspice/include/"
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/source/",
+                "${workspaceFolder}/extern/**",
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",
