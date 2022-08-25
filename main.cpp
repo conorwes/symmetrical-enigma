@@ -4,6 +4,7 @@
 #include <string>
 
 #include "bodyID_utils.hpp"
+#include "occultation_utils.hpp"
 
 using namespace CPPSpice;
 
@@ -32,8 +33,11 @@ bool are_valid_dates(const std::string& lower_bound, const std::string& upper_bo
 }
 
 int main() {
+
+   CPPSpice::TODO_GFFOCE_WRAPPER();
+
    // first, let's retrieve the bodies involved
-   std::cout << "Observer Name: ";
+   /*std::cout << "Observer Name: ";
    std::string observerName = "";
    std::cin >> observerName;
    std::transform(
@@ -57,7 +61,7 @@ int main() {
       occulterName.begin(), occulterName.end(), occulterName.begin(), ::toupper);
 
    auto occulterID = GetNAIFIDfromName(occulterName);
-   std::cout << occulterID << std::endl;
+   std::cout << occulterID << std::endl;*/
 
    // next, let's retrieve the epochs which define our bounds
    /*std::cout << "Lower Bound Epoch (YYYY-MMM-DD): ";
