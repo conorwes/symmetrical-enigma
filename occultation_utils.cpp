@@ -1,40 +1,31 @@
 #include "occultation_utils.hpp"
-#include <iostream>
 
-extern "C" {
-#include "SpiceZpl.h"
-#include "SpiceZdf.h"
-#include "SpiceErr.h"
-#include "SpiceEK.h"
-#include "SpiceFrm.h"
-#include "SpiceCel.h"
-#include "SpiceCK.h"
-#include "SpiceSPK.h"
-#include "SpiceGF.h"
-#include "SpiceOccult.h"
-#include "SpiceZpr.h"
-#include "SpiceZim.h"
-}
-
-void CPPSpice::TODO_GFFOCE_WRAPPER() {
+SpiceCell* CPPSpice::PerformOccultationSearch(
+   const std::string& lower_bound_epoch,
+   const std::string& upper_bound_epoch,
+   const double       step_size,
+   const std::string& occultation_type,
+   const std::string& occulting_body,
+   const std::string& occulting_body_shape,
+   const std::string& occulting_body_frame,
+   const std::string& target_body,
+   const std::string& target_body_shape,
+   const std::string& target_body_frame,
+   const std::string& aberration_corrections,
+   const std::string& observer_body,
+   const double       tolerance) {
 
    SpiceBoolean bail;
    SpiceBoolean rpt;
 
    SpiceChar* win0;
    SpiceChar* win1;
-   SpiceChar  begstr[41];
-   SpiceChar  endstr[41];
 
    SPICEDOUBLE_CELL(cnfine, 200);
    SPICEDOUBLE_CELL(result, 200);
 
    SpiceDouble et0;
    SpiceDouble et1;
-   SpiceDouble left;
-   SpiceDouble right;
-
-   SpiceInt i;
 
    furnsh_c("D:/Repositories/symmetrical-enigma/include/pck.tpc");
 
@@ -56,16 +47,16 @@ void CPPSpice::TODO_GFFOCE_WRAPPER() {
    rpt  = SPICETRUE;
 
    gfocce_c(
-      /*ConstSpiceChar* occtyp*/ "ANY",
-      /*ConstSpiceChar* front*/ "MOON",
-      /*ConstSpiceChar *fshape*/ "ellipsoid",
-      /*ConstSpiceChar *fframe*/ "IAU_MOON",
-      /*ConstSpiceChar* back*/ "SUN",
-      /*ConstSpiceChar* bshape*/ "ellipsoid",
-      /*ConstSpiceChar* bframe*/ "IAU_SUN",
-      /*ConstSpiceChar* abcorr*/ "LT",
-      /*ConstSpiceChar* obsrvr*/ "EARTH",
-      /*SpiceDouble tol*/ 1.e-6,
+      /*ConstSpiceChar* occtyp*/ occultation_type.c_str(),
+      /*ConstSpiceChar* front*/ occulting_body.c_str(),
+      /*ConstSpiceChar *fshape*/ occulting_body_shape.c_str(),
+      /*ConstSpiceChar *fframe*/ occulting_body_frame.c_str(),
+      /*ConstSpiceChar* back*/ target_body.c_str(),
+      /*ConstSpiceChar* bshape*/ target_body_shape.c_str(),
+      /*ConstSpiceChar* bframe*/ target_body_frame.c_str(),
+      /*ConstSpiceChar* abcorr*/ aberration_corrections.c_str(),
+      /*ConstSpiceChar* obsrvr*/ observer_body.c_str(),
+      /*SpiceDouble tol*/ tolerance,
       /*void (*udstep)(SpiceDouble et, SpiceDouble *step)*/ gfstep_c,
       /*void (*udrefn)(SpiceDouble t1, SpiceDouble t2, SpiceBoolean s1, SpiceBoolean s2,
          SpiceDouble *t)*/
@@ -80,6 +71,16 @@ void CPPSpice::TODO_GFFOCE_WRAPPER() {
       /*SpiceBoolean (*udbail)()*/ gfbail_c,
       /*SpiceCell *cnfine*/ &cnfine,
       /*SpiceCell *result*/ &result);
+
+   return &result;
+}
+
+void CPPSpice::ReportSummary(SpiceCell* result) {
+   SpiceInt    i;
+   SpiceDouble left;
+   SpiceDouble right;
+   SpiceChar   begstr[41];
+   SpiceChar   endstr[41];
 
    if (gfbail_c()) {
       /*
@@ -106,15 +107,15 @@ void CPPSpice::TODO_GFFOCE_WRAPPER() {
    }
    else {
 
-      if (wncard_c(&result) == 0) {
+      if (wncard_c(result) == 0) {
          printf("No occultation was found.\n");
       }
       else {
-         for (i = 0; i < wncard_c(&result); i++) {
+         for (i = 0; i < wncard_c(result); i++) {
             /*
             fetch and display each occultation interval.
             */
-            wnfetd_c(&result, i, &left, &right);
+            wnfetd_c(result, i, &left, &right);
 
             timout_c(left, "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)", 41, begstr);
             timout_c(right, "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)", 41, endstr);

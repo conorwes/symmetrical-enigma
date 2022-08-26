@@ -1,40 +1,26 @@
-#include <algorithm>
-#include <iostream>
-#include <regex>
-#include <string>
-
-#include "bodyID_utils.hpp"
+#include "support_utils.hpp"
 #include "occultation_utils.hpp"
 
 using namespace CPPSpice;
 
-bool is_valid_date_format(const std::string& input) {
-   if (!std::regex_match(input, std::regex("[0-9]{4}-[A-Z]{3}-[0-9]{2}"))) {
-      std::cout << "Error: input epoch does not match the required format." << std::endl;
-      return false;
-   }
-
-   return true;
-}
-
-bool are_valid_dates(const std::string& lower_bound, const std::string& upper_bound) {
-   if (lower_bound == upper_bound) {
-      std::cout << "Error: lower and upper bounds are identical." << std::endl;
-      return false;
-   }
-
-   // TODO - add in some epoch checking, namely:
-   // 1. upper > lower
-   // 2. month is a real month
-   // 3. day is a real day
-   // 4. ???
-
-   return true;
-}
-
 int main() {
 
-   CPPSpice::TODO_GFFOCE_WRAPPER();
+   auto results = CPPSpice::PerformOccultationSearch(
+      "2030 JAN 01 00:00:00 TDB",
+      "2040 JAN 01 00:00:00 TDB",
+      double(20.0),
+      "ANY",
+      "MOON",
+      "ellipsoid",
+      "IAU_MOON",
+      "SUN",
+      "ellipsoid",
+      "IAU_SUN",
+      "LT",
+      "EARTH",
+      1e-6);
+
+   CPPSpice::ReportSummary(std::move(results));
 
    // first, let's retrieve the bodies involved
    /*std::cout << "Observer Name: ";
