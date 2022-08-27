@@ -27,12 +27,6 @@ SpiceCell* CPPSpice::PerformOccultationSearch(
    SpiceDouble et0;
    SpiceDouble et1;
 
-   furnsh_c("D:/Repositories/symmetrical-enigma/include/pck.tpc");
-
-   furnsh_c("D:/Repositories/symmetrical-enigma/include/naif0012.tls");
-   furnsh_c("D:/Repositories/symmetrical-enigma/include/de421.bsp");
-   furnsh_c("D:/Repositories/symmetrical-enigma/include/pck00010.tpc");
-
    win0 = "2030 JAN 01 00:00:00 TDB";
    win1 = "2040 JAN 01 00:00:00 TDB";
 

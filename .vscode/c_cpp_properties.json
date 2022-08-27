@@ -4,7 +4,6 @@
             "name": "Win64",
             "includePath": [
                 "${workspaceFolder}/include/**",
-                "${workspaceFolder}/source/**",
                 "${workspaceFolder}/extern/**",
                 "${workspaceFolder}/**"
             ],
