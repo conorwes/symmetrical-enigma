@@ -1,3 +1,5 @@
+#include <tuple>
+
 #include "support_utils.hpp"
 #include "occultation_utils.hpp"
 
@@ -73,50 +75,65 @@ int main() {
 
    std::string occultation_type = input;
 
-   // Time to get the occulter information
-   std::cout << "Occulting Body: " << std::endl;
-   std::getline(std::cin, input);
-   // perform some validation
-   std::string occulting_body = input;
+   auto retrieve_body_info =
+      [](const std::string&                                 participant_type,
+         std::tuple<std::string, std::string, std::string>& participant_info) -> bool {
+      std::string input;
+      std::cout << participant_type << " Body: " << std::endl;
+      std::getline(std::cin, input);
+      // perform some validation
+      std::string participant_name = input;
 
-   std::cout << "Occulting Body Shape: " << std::endl;
-   // TODO - add support for DSK/Unprioritized
-   std::vector<std::string> valid_shapes = {
-      "ELLIPSOID", "POINT" /*, "DSK/UNPRIORITIZED"*/};
+      std::cout << participant_type << " Body Shape: " << std::endl;
 
-   for (auto& s : valid_shapes) {
-      std::cout << "- " << s << std::endl;
-   }
-   std::getline(std::cin, input);
+      std::vector<std::string> valid_shapes = {
+         "ELLIPSOID", "POINT" /*, "DSK/UNPRIORITIZED"*/};
 
-   auto shape_it = std::find_if(
-      valid_shapes.begin(), valid_shapes.end(), [&input](const std::string& shape) {
-         return shape == input;
-      });
+      for (auto& s : valid_shapes) {
+         std::cout << "- " << s << std::endl;
+      }
+      std::getline(std::cin, input);
 
-   if (shape_it == valid_shapes.end()) {
-      std::cout << "Error: the specified body shape '" << input
-                << "' is not a valid option." << std::endl;
-      return 1;
+      auto shape_it = std::find_if(
+         valid_shapes.begin(), valid_shapes.end(), [&input](const std::string& shape) {
+            return shape == input;
+         });
+
+      if (shape_it == valid_shapes.end()) {
+         std::cout << "Error: the specified body shape '" << input
+                   << "' is not a valid option." << std::endl;
+         return false;
+      };
+      std::string participant_body_shape = input;
+
+      std::cout << participant_type << " Body Frame: " << std::endl;
+      // TODO - add some validation
+      std::getline(std::cin, input);
+      std::string participant_body_frame = input;
+
+      participant_info = std::make_tuple(
+         participant_name, participant_body_shape, participant_body_frame);
+
+      return true;
    };
-   std::string occulting_body_shape = input;
 
-   std::cout << "Occulting Body Frame: " << std::endl;
-   // TODO - add some validation
-   std::getline(std::cin, input);
-   std::string occulting_body_frame = input;
+   std::tuple<std::string, std::string, std::string> occulting_information;
+   retrieve_body_info("Occulting", occulting_information);
+
+   std::tuple<std::string, std::string, std::string> target_information;
+   retrieve_body_info("Target", target_information);
 
    auto results = CPPSpice::PerformOccultationSearch(
       startEpoch,
       endEpoch,
       double(20.0),
       occultation_type,
-      occulting_body,
-      occulting_body_shape,
-      occulting_body_frame,
-      "SUN",
-      "ellipsoid",
-      "IAU_SUN",
+      std::get<0>(occulting_information),
+      std::get<1>(occulting_information),
+      std::get<2>(occulting_information),
+      std::get<0>(target_information),
+      std::get<1>(target_information),
+      std::get<2>(target_information),
       "LT",
       "EARTH",
       1e-6);
