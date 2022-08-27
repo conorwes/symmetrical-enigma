@@ -53,6 +53,11 @@ int main() {
       return 1;
    }
 
+   // Now we'll get the step size
+   std::cout << "Step Size (s): " << std::endl;
+   std::getline(std::cin, input);
+   double step_size = std::atof(input.c_str());
+
    // Next retrieve the occultation type and validate
    std::cout << "Occultation Type: " << std::endl;
    std::vector<std::string> valid_types = {"FULL", "ANNULAR", "PARTIAL", "ANY"};
@@ -123,10 +128,12 @@ int main() {
    std::tuple<std::string, std::string, std::string> target_information;
    retrieve_body_info("Target", target_information);
 
+   
+
    auto results = CPPSpice::PerformOccultationSearch(
       startEpoch,
       endEpoch,
-      double(20.0),
+      step_size,
       occultation_type,
       std::get<0>(occulting_information),
       std::get<1>(occulting_information),
