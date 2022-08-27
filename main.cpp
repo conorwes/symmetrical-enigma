@@ -4,10 +4,13 @@
 using namespace CPPSpice;
 
 int main() {
+   // TODO - let's make it so you can:
+   // 1. specify the inputs directly into the console or
+   // 2. read in a config file with everything you need
 
    // Define some helpful lambdas for this program
    // A simple lambda to prompt the user to specify a kernel path.
-   auto FurnishSPICEKernel = [](const std::string& kernel_name) -> void {
+   auto furnish_spice_kernel = [](const std::string& kernel_name) -> void {
       std::string path;
       std::cout << "Please specify your " << kernel_name
                 << " kernel's path: " << std::endl;
@@ -22,9 +25,9 @@ int main() {
 
    // Before we do anything else, let's furnish the kernels we'll need for this program.
    // For this program, we'll need a pck, tsp, and bsp file, so furnish those now
-   FurnishSPICEKernel("P Constants");
-   FurnishSPICEKernel("Timespan");
-   FurnishSPICEKernel("Planetary Ephemerides");
+   furnish_spice_kernel("P Constants");
+   furnish_spice_kernel("Timespan");
+   furnish_spice_kernel("Planetary Ephemerides");
 
    // Now we're ready to roll. Let's get the other things we'll need here.
 
@@ -32,14 +35,14 @@ int main() {
    std::cout << "Lower Bound Epoch (YYYY MMM DD HH:MM:SS TDB): " << std::endl;
    std::string input;
    std::getline(std::cin, input);
-   if (!IsValidDateFormat(input)) {
+   if (!IsValidDate(input)) {
       return 1;
    }
    std::string startEpoch = input;
 
    std::cout << "Upper Bound Epoch (YYYY MMM DD HH:MM:SS TDB): " << std::endl;
    std::getline(std::cin, input);
-   if (!IsValidDateFormat(input)) {
+   if (!IsValidDate(input)) {
       return 1;
    }
    std::string endEpoch = input;
@@ -48,14 +51,69 @@ int main() {
       return 1;
    }
 
+   // Next retrieve the occultation type and validate
+   std::cout << "Occultation Type: " << std::endl;
+   std::vector<std::string> valid_types = {"FULL", "ANNULAR", "PARTIAL", "ANY"};
+
+   for (auto& type : valid_types) {
+      std::cout << "- " << type << std::endl;
+   }
+   std::getline(std::cin, input);
+
+   auto type_it = std::find_if(
+      valid_types.begin(), valid_types.end(), [&input](const std::string& type) {
+         return type == input;
+      });
+
+   if (type_it == valid_types.end()) {
+      std::cout << "Error: the specified occultation type '" << input
+                << "' is not a valid option." << std::endl;
+      return 1;
+   };
+
+   std::string occultation_type = input;
+
+   // Time to get the occulter information
+   std::cout << "Occulting Body: " << std::endl;
+   std::getline(std::cin, input);
+   // perform some validation
+   std::string occulting_body = input;
+
+   std::cout << "Occulting Body Shape: " << std::endl;
+   // TODO - add support for DSK/Unprioritized
+   std::vector<std::string> valid_shapes = {
+      "ELLIPSOID", "POINT" /*, "DSK/UNPRIORITIZED"*/};
+
+   for (auto& s : valid_shapes) {
+      std::cout << "- " << s << std::endl;
+   }
+   std::getline(std::cin, input);
+
+   auto shape_it = std::find_if(
+      valid_shapes.begin(), valid_shapes.end(), [&input](const std::string& shape) {
+         return shape == input;
+      });
+
+   if (shape_it == valid_shapes.end()) {
+      std::cout << "Error: the specified body shape '" << input
+                << "' is not a valid option." << std::endl;
+      return 1;
+   };
+   std::string occulting_body_shape = input;
+
+   std::cout << "Occulting Body Frame: " << std::endl;
+   // TODO - add some validation
+   std::getline(std::cin, input);
+   std::string occulting_body_frame = input;
+
    auto results = CPPSpice::PerformOccultationSearch(
       startEpoch,
       endEpoch,
       double(20.0),
-      "ANY",
-      "MOON",
-      "ellipsoid",
-      "IAU_MOON",
+      occultation_type,
+      occulting_body,
+      occulting_body_shape,
+      occulting_body_frame,
       "SUN",
       "ellipsoid",
       "IAU_SUN",
@@ -64,54 +122,6 @@ int main() {
       1e-6);
 
    CPPSpice::ReportSummary(std::move(results));
-
-   // first, let's retrieve the bodies involved
-   /*std::cout << "Observer Name: ";
-   std::string observerName = "";
-   std::cin >> observerName;
-   std::transform(
-      observerName.begin(), observerName.end(), observerName.begin(), ::toupper);
-
-   auto observerID = GetNAIFIDfromName(observerName);
-   std::cout << observerID << std::endl;
-
-   std::cout << "Target Name: ";
-   std::string targetName = "";
-   std::cin >> targetName;
-   std::transform(targetName.begin(), targetName.end(), targetName.begin(), ::toupper);
-
-   auto targetID = GetNAIFIDfromName(targetName);
-   std::cout << targetID << std::endl;
-
-   std::cout << "Occulter Name: ";
-   std::string occulterName = "";
-   std::cin >> occulterName;
-   std::transform(
-      occulterName.begin(), occulterName.end(), occulterName.begin(), ::toupper);
-
-   auto occulterID = GetNAIFIDfromName(occulterName);
-   std::cout << occulterID << std::endl;*/
-
-   // next, let's retrieve the epochs which define our bounds
-   /*std::cout << "Lower Bound Epoch (YYYY-MMM-DD): ";
-   std::string input = "";
-   std::cin >> input;
-   if (!is_valid_date_format(input)) {
-      return 1;
-   }
-   std::string startEpoch = input;
-
-   std::cout << "Upper Bound Epoch (YYYY-MMM-DD): ";
-   input = "";
-   std::cin >> input;
-   if (!is_valid_date_format(input)) {
-      return 1;
-   }
-   std::string endEpoch = input;
-
-   if (!are_valid_dates(startEpoch, endEpoch)) {
-      return 1;
-   }*/
 
    return 0;
 }

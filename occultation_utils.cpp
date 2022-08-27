@@ -18,24 +18,18 @@ SpiceCell* CPPSpice::PerformOccultationSearch(
    SpiceBoolean bail;
    SpiceBoolean rpt;
 
-   SpiceChar* win0;
-   SpiceChar* win1;
-
    SPICEDOUBLE_CELL(cnfine, 200);
    SPICEDOUBLE_CELL(result, 200);
 
    SpiceDouble et0;
    SpiceDouble et1;
 
-   win0 = "2030 JAN 01 00:00:00 TDB";
-   win1 = "2040 JAN 01 00:00:00 TDB";
-
-   str2et_c(win0, &et0);
-   str2et_c(win1, &et1);
+   str2et_c(lower_bound_epoch.c_str(), &et0);
+   str2et_c(upper_bound_epoch.c_str(), &et1);
 
    wninsd_c(et0, et1, &cnfine);
 
-   gfsstp_c(20.0);
+   gfsstp_c(step_size);
 
    bail = SPICETRUE;
    rpt  = SPICETRUE;
