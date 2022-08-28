@@ -12,24 +12,35 @@ int main() {
 
    // Define some helpful lambdas for this program
    // A simple lambda to prompt the user to specify a kernel path.
-   auto furnish_spice_kernel = [](const std::string& kernel_name) -> void {
+   auto furnish_spice_kernel = [](const std::string& kernel_name) -> bool {
       std::string path;
-      std::cout << "Please specify your " << kernel_name
-                << " kernel's path: " << std::endl;
+      std::cout << "Specify the " << kernel_name << " kernel's path: " << std::endl;
       std::getline(std::cin, path);
 
-      // TODO - add some path validation here
+      // Before feeding this kernel into CSPICE, let's make sure it actually exists
+      if (FILE* file = fopen(path.c_str(), "r")) {
+         fclose(file);
+      }
+      else {
+         std::cout << "Error: the specified kernel '" << path << "' could not be located."
+                   << std::endl;
+         return false;
+      }
 
-      // Call the CSPICE furnsh_c routine
+      // Call the CSPICE furnsh_c routine. No need to error check, since the CSPICE
+      // routines are self-reporting.
       furnsh_c(path.c_str());
-      return;
+      return true;
    };
 
    // Before we do anything else, let's furnish the kernels we'll need for this program.
    // For this program, we'll need a pck, tsp, and bsp file, so furnish those now
-   furnish_spice_kernel("P Constants");
-   furnish_spice_kernel("Timespan");
-   furnish_spice_kernel("Planetary Ephemerides");
+   if (!furnish_spice_kernel("P Constants"))
+      return 1;
+   if (!furnish_spice_kernel("Timespan"))
+      return 1;
+   if (!furnish_spice_kernel("Planetary Ephemerides"))
+      return 1;
 
    // Now we're ready to roll. Let's get the other things we'll need here.
 
@@ -57,6 +68,10 @@ int main() {
    std::cout << "Step Size (s): " << std::endl;
    std::getline(std::cin, input);
    double step_size = std::atof(input.c_str());
+   if (step_size < 0.0) {
+      std::cout << "Error: negative step sizes are not supported." << std::endl;
+      return 1;
+   }
 
    // Next retrieve the occultation type and validate
    std::cout << "Occultation Type: " << std::endl;
@@ -86,7 +101,11 @@ int main() {
       std::string input;
       std::cout << participant_type << " Body: " << std::endl;
       std::getline(std::cin, input);
-      // perform some validation
+      if (GetNAIFIDfromName(input) == -1) {
+         std::cout << "Error: the specified body name '" << input
+                   << "' does not correspond to a valid NAIF object." << std::endl;
+         return false;
+      }
       std::string participant_name = input;
 
       std::cout << participant_type << " Body Shape: " << std::endl;
@@ -114,6 +133,13 @@ int main() {
       std::cout << participant_type << " Body Frame: " << std::endl;
       // TODO - add some validation
       std::getline(std::cin, input);
+      int frame_code{0};
+      namfrm_c(input.c_str(), &frame_code);
+      if (frame_code == 0) {
+         std::cout << "Error: the specified body frame: '" << input
+                   << "' is not recognized." << std::endl;
+         return false;
+      }
       std::string participant_body_frame = input;
 
       participant_info = std::make_tuple(
@@ -123,12 +149,32 @@ int main() {
    };
 
    std::tuple<std::string, std::string, std::string> occulting_information;
-   retrieve_body_info("Occulting", occulting_information);
+   if (!retrieve_body_info("Occulting", occulting_information))
+      return 1;
 
    std::tuple<std::string, std::string, std::string> target_information;
-   retrieve_body_info("Target", target_information);
+   if (!retrieve_body_info("Target", target_information))
+      return 1;
 
-   
+   // get the observer
+   std::cout << "Observing Body: " << std::endl;
+   std::getline(std::cin, input);
+   if (GetNAIFIDfromName(input) == -1) {
+      std::cout << "Error: the specified body name '" << input
+                << "' does not correspond to a valid NAIF object." << std::endl;
+      return 1;
+   }
+   std::string observing_name = input;
+
+   // get the tolerance
+   std::cout << "Tolerance: " << std::endl;
+   std::getline(std::cin, input);
+   double tolerance = std::atof(input.c_str());
+   if (tolerance < 0.0) {
+      std::cout << "Error: the tolerance value '" << tolerance << "' is less than zero."
+                << std::endl;
+      return 1;
+   }
 
    auto results = CPPSpice::PerformOccultationSearch(
       startEpoch,
@@ -142,8 +188,8 @@ int main() {
       std::get<1>(target_information),
       std::get<2>(target_information),
       "LT",
-      "EARTH",
-      1e-6);
+      observing_name,
+      tolerance);
 
    CPPSpice::ReportSummary(std::move(results));
 
