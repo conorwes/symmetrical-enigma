@@ -31,3 +31,4 @@ Part of this effort was also an exploration of working with C++ in Visual Studio
 - Add support for shape types other than Ellipsoid and Point.
 - Expand support for arbitrary date formats.
 - Implement more robust SPICE file date checking.
+- Evaluate (and refactor as necessary) cross platform compatibility.
