@@ -52,7 +52,9 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "zzfcstring.c": "cpp",
-        "bodc2n_c.c": "cpp"
+        "bodc2n_c.c": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp"
     },
     "editor.formatOnSave": true,
     "editor.formatOnType": true,

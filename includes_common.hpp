@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <tuple>
 
 extern "C" {
 #include "SpiceZpl.h"
@@ -17,3 +18,18 @@ extern "C" {
 #include "SpiceZpr.h"
 #include "SpiceZim.h"
 }
+
+namespace CPPSpice {
+   using ParticipantDetails = std::tuple<std::string, std::string, std::string>;
+
+   struct SimulationData {
+      std::string        LowerBoundEpoch;
+      std::string        UpperBoundEpoch;
+      double             StepSize;
+      std::string        OccultationType;
+      ParticipantDetails OcculterDetails;
+      ParticipantDetails TargetDetails;
+      std::string        ObserverName;
+      double             Tolerance;
+   };
+}   // namespace CPPSpice

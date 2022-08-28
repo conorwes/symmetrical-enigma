@@ -1,19 +1,6 @@
 #include "occultation_utils.hpp"
 
-SpiceCell* CPPSpice::PerformOccultationSearch(
-   const std::string& lower_bound_epoch,
-   const std::string& upper_bound_epoch,
-   const double       step_size,
-   const std::string& occultation_type,
-   const std::string& occulting_body,
-   const std::string& occulting_body_shape,
-   const std::string& occulting_body_frame,
-   const std::string& target_body,
-   const std::string& target_body_shape,
-   const std::string& target_body_frame,
-   const std::string& aberration_corrections,
-   const std::string& observer_body,
-   const double       tolerance) {
+SpiceCell* CPPSpice::PerformOccultationSearch(const SimulationData& data) {
 
    SpiceBoolean bail;
    SpiceBoolean rpt;
@@ -24,27 +11,27 @@ SpiceCell* CPPSpice::PerformOccultationSearch(
    SpiceDouble et0;
    SpiceDouble et1;
 
-   str2et_c(lower_bound_epoch.c_str(), &et0);
-   str2et_c(upper_bound_epoch.c_str(), &et1);
+   str2et_c(data.LowerBoundEpoch.c_str(), &et0);
+   str2et_c(data.UpperBoundEpoch.c_str(), &et1);
 
    wninsd_c(et0, et1, &cnfine);
 
-   gfsstp_c(step_size);
+   gfsstp_c(data.StepSize);
 
    bail = SPICETRUE;
    rpt  = SPICETRUE;
 
    gfocce_c(
-      /*ConstSpiceChar* occtyp*/ occultation_type.c_str(),
-      /*ConstSpiceChar* front*/ occulting_body.c_str(),
-      /*ConstSpiceChar *fshape*/ occulting_body_shape.c_str(),
-      /*ConstSpiceChar *fframe*/ occulting_body_frame.c_str(),
-      /*ConstSpiceChar* back*/ target_body.c_str(),
-      /*ConstSpiceChar* bshape*/ target_body_shape.c_str(),
-      /*ConstSpiceChar* bframe*/ target_body_frame.c_str(),
-      /*ConstSpiceChar* abcorr*/ aberration_corrections.c_str(),
-      /*ConstSpiceChar* obsrvr*/ observer_body.c_str(),
-      /*SpiceDouble tol*/ tolerance,
+      /*ConstSpiceChar* occtyp*/ data.OccultationType.c_str(),
+      /*ConstSpiceChar* front*/ std::get<0>(data.OcculterDetails).c_str(),
+      /*ConstSpiceChar *fshape*/ std::get<1>(data.OcculterDetails).c_str(),
+      /*ConstSpiceChar *fframe*/ std::get<2>(data.OcculterDetails).c_str(),
+      /*ConstSpiceChar* back*/ std::get<0>(data.TargetDetails).c_str(),
+      /*ConstSpiceChar* bshape*/ std::get<1>(data.TargetDetails).c_str(),
+      /*ConstSpiceChar* bframe*/ std::get<2>(data.TargetDetails).c_str(),
+      /*ConstSpiceChar* abcorr*/ "LT",
+      /*ConstSpiceChar* obsrvr*/ data.ObserverName.c_str(),
+      /*SpiceDouble tol*/ data.Tolerance,
       /*void (*udstep)(SpiceDouble et, SpiceDouble *step)*/ gfstep_c,
       /*void (*udrefn)(SpiceDouble t1, SpiceDouble t2, SpiceBoolean s1, SpiceBoolean s2,
          SpiceDouble *t)*/

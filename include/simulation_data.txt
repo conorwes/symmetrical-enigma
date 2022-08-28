@@ -1,0 +1,20 @@
+// Kernels to Furnish
+PConstants: ./include/pck00010.tpc
+Timespan: ./include/naif0012.tls
+PlanetaryEphemerides: ./include/de421.bsp
+
+// Time Data
+LowerBoundEpoch: 2030 JAN 01 00:00:00 TDB
+UpperBoundEpoch: 2040 JAN 01 00:00:00 TDB
+StepSize: 20.0
+
+// Simulation Data
+OccultationType: ANY
+OccultingBody: MOON
+OccultingBodyShape: ELLIPSOID
+OccultingBodyFrame: IAU_MOON
+TargetBody: SUN
+TargetBodyShape: ELLIPSOID
+TargetBodyFrame: IAU_SUN
+ObservingBody: EARTH
+Tolerance: 1e-6

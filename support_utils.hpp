@@ -2,6 +2,9 @@
 
 #include <regex>
 #include <string>
+#include <tuple>
+
+#include "includes_common.hpp"
 
 namespace CPPSpice {
    int GetNAIFIDfromName(const std::string& name);
@@ -10,6 +13,15 @@ namespace CPPSpice {
 
    bool
    AreDateBoundsValid(const std::string& lower_bound, const std::string& upper_bound);
+
+   bool FurnishSPICEKernel(const std::string& kernel_name);
+
+   bool QueryParticipantDetails(
+      const std::string&                                 participant_type,
+      std::tuple<std::string, std::string, std::string>& participant_info);
+
+   bool
+   ParseConfigurationFile(const std::string& filename, CPPSpice::SimulationData& data);
 
    // compiling regex is costly, so let's do it once
    const auto date_format =
@@ -29,4 +41,6 @@ namespace CPPSpice {
       std::pair<std::string, int>("OCT", 31),
       std::pair<std::string, int>("NOV", 30),
       std::pair<std::string, int>("DEC", 31)};
+
+   enum class DefinitionMode : int { Console, File };
 }   // namespace CPPSpice
