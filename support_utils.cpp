@@ -274,40 +274,91 @@ bool CPPSpice::ParseConfigurationFile(const std::string& filename, SimulationDat
          furnsh_c(content.c_str());
       }
       else if (identifier == "LowerBoundEpoch") {
+         if (!IsValidDate(content)) {
+            std::cout << "Error: The value specified for '" << identifier
+                      << "' is invalid." << std::endl;
+            return false;
+         }
          data.LowerBoundEpoch = content;
       }
       else if (identifier == "UpperBoundEpoch") {
+         if (!IsValidDate(content)) {
+            std::cout << "Error: The value specified for '" << identifier
+                      << "' is invalid." << std::endl;
+            return false;
+         }
          data.UpperBoundEpoch = content;
       }
       else if (identifier == "StepSize") {
          data.StepSize = std::atof(content.c_str());
+         if (data.StepSize < 0.0) {
+            std::cout << "Error: The value specified for '" << identifier
+                      << "' is invalid." << std::endl;
+            return false;
+         }
       }
       else if (identifier == "OccultationType") {
+         auto type_it = std::find_if(
+            valid_occultation_types.begin(),
+            valid_occultation_types.end(),
+            [&content](const std::string& type) {
+               return type == content;
+            });
+
+         if (type_it == valid_occultation_types.end()) {
+            std::cout << "Error: the value specified for '" << identifier
+                      << "' is invalid." << std::endl;
+            return false;
+         };
          data.OccultationType = content;
       }
       else if (identifier == "OccultingBodyShape") {
+         // TODO - add some validation here
          std::get<1>(data.OcculterDetails) = content;
       }
       else if (identifier == "OccultingBodyFrame") {
+         // TODO - add some validation here
          std::get<2>(data.OcculterDetails) = content;
       }
       else if (identifier == "OccultingBody") {
+         if (GetNAIFIDfromName(content) == -1) {
+            std::cout << "Error: the specified body name '" << content
+                      << "' does not correspond to a valid NAIF object." << std::endl;
+            return false;
+         }
          std::get<0>(data.OcculterDetails) = content;
       }
       else if (identifier == "TargetBodyShape") {
+         // TODO - add some validation here
          std::get<1>(data.TargetDetails) = content;
       }
       else if (identifier == "TargetBodyFrame") {
+         // TODO - add some validation here
          std::get<2>(data.TargetDetails) = content;
       }
       else if (identifier == "TargetBody") {
+         if (GetNAIFIDfromName(content) == -1) {
+            std::cout << "Error: the specified body name '" << content
+                      << "' does not correspond to a valid NAIF object." << std::endl;
+            return false;
+         }
          std::get<0>(data.TargetDetails) = content;
       }
       else if (identifier == "ObservingBody") {
+         if (GetNAIFIDfromName(content) == -1) {
+            std::cout << "Error: the specified body name '" << content
+                      << "' does not correspond to a valid NAIF object." << std::endl;
+            return false;
+         }
          data.ObserverName = content;
       }
       else if (identifier == "Tolerance") {
          data.Tolerance = std::atof(content.c_str());
+         if (data.Tolerance <= 0.0) {
+            std::cout << "Error: the value specified for '" << identifier
+                      << "' is invalid." << std::endl;
+            return false;
+         }
       }
       else {
          continue;

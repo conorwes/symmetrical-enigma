@@ -75,19 +75,20 @@ int main() {
 
       // Next retrieve the occultation type and validate
       std::cout << "Occultation Type: " << std::endl;
-      std::vector<std::string> valid_types = {"FULL", "ANNULAR", "PARTIAL", "ANY"};
 
-      for (auto& type : valid_types) {
+      for (auto& type : valid_occultation_types) {
          std::cout << "- " << type << std::endl;
       }
       std::getline(std::cin, input);
 
       auto type_it = std::find_if(
-         valid_types.begin(), valid_types.end(), [&input](const std::string& type) {
+         valid_occultation_types.begin(),
+         valid_occultation_types.end(),
+         [&input](const std::string& type) {
             return type == input;
          });
 
-      if (type_it == valid_types.end()) {
+      if (type_it == valid_occultation_types.end()) {
          std::cout << "Error: the specified occultation type '" << input
                    << "' is not a valid option." << std::endl;
          return 1;

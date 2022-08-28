@@ -43,4 +43,7 @@ namespace CPPSpice {
       std::pair<std::string, int>("DEC", 31)};
 
    enum class DefinitionMode : int { Console, File };
+
+   const std::vector<std::string> valid_occultation_types = {
+      "FULL", "ANNULAR", "PARTIAL", "ANY"};
 }   // namespace CPPSpice
