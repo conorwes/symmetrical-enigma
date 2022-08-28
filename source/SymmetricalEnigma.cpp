@@ -163,3 +163,47 @@ int main() {
 
    return 0;
 }
+// clang-format off
+/*
+
+- Detailed_Input
+
+   none.
+
+- Detailed_Output
+
+   Returns a status code in the form of an int.
+
+- Error Handling
+
+   If a CSPICE routine encounters an error, the native CSPICE error handler will
+   be responsible for error handling. Otherwise, we report an error and return an
+   error code.
+
+- Particulars
+
+   None.
+
+- Literature_References
+
+   None.
+
+- Author
+
+   C.P. Westphal     (self)
+
+- Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+- Restrictions
+
+   None.
+
+- Version
+
+   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+
+*/
+// clang-format on

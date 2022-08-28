@@ -145,7 +145,7 @@ namespace cppspice {
    Shape type is used in the occultation analysis.
    */
    // TODO - add support for DSK/UNPRIORITIZED
-   std::vector<std::string> validShapeTypes = {
+   const std::vector<std::string> validShapeTypes = {
       "ELLIPSOID",
       "POINT" /*, "DSK/UNPRIORITIZED"*/ };
 }   // namespace cppspice
