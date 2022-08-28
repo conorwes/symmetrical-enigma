@@ -225,6 +225,103 @@ bool CPPSpice::QueryParticipantDetails(
    return true;
 }
 
+bool CPPSpice::QueryConfigurationDetails(SimulationData& data) {
+
+   std::string input;
+
+   // Before we do anything else, let's furnish the kernels
+   // we'll need for this
+   // program. For this program, we'll need a pck, tsp, and bsp file, so furnish those
+   // now
+   if (!FurnishSPICEKernel("P Constants"))
+      return false;
+   if (!FurnishSPICEKernel("Timespan"))
+      return false;
+   if (!FurnishSPICEKernel("Planetary Ephemerides"))
+      return false;
+
+   // Now we're ready to roll. Let's get the other things we'll need here.
+
+   // Let's get the date range and perform some validation
+   std::cout << "Lower Bound Epoch (YYYY MMM DD HH:MM:SS TDB): " << std::endl;
+   std::getline(std::cin, input);
+   if (!IsValidDate(input)) {
+      return false;
+   }
+   data.LowerBoundEpoch = input;
+
+   std::cout << "Upper Bound Epoch (YYYY MMM DD HH:MM:SS TDB): " << std::endl;
+   std::getline(std::cin, input);
+   if (!IsValidDate(input)) {
+      return false;
+   }
+   data.UpperBoundEpoch = input;
+
+   if (!AreDateBoundsValid(data.LowerBoundEpoch, data.UpperBoundEpoch)) {
+      return false;
+   }
+
+   // Now we'll get the step size
+   std::cout << "Step Size (s): " << std::endl;
+   std::getline(std::cin, input);
+   data.StepSize = std::atof(input.c_str());
+   if (data.StepSize < 0.0) {
+      std::cout << "Error: negative step sizes are not supported." << std::endl;
+      return false;
+   }
+
+   // Next retrieve the occultation type and validate
+   std::cout << "Occultation Type: " << std::endl;
+
+   for (auto& type : valid_occultation_types) {
+      std::cout << "- " << type << std::endl;
+   }
+   std::getline(std::cin, input);
+
+   auto type_it = std::find_if(
+      valid_occultation_types.begin(),
+      valid_occultation_types.end(),
+      [&input](const std::string& type) {
+         return type == input;
+      });
+
+   if (type_it == valid_occultation_types.end()) {
+      std::cout << "Error: the specified occultation type '" << input
+                << "' is not a valid option." << std::endl;
+      return false;
+   };
+
+   data.OccultationType = input;
+
+   if (!QueryParticipantDetails("Occulting", data.OcculterDetails))
+      return false;
+
+   if (!QueryParticipantDetails("Target", data.TargetDetails))
+      return false;
+
+   // get the observer
+   std::cout << "Observing Body: " << std::endl;
+   std::getline(std::cin, input);
+   if (GetNAIFIDfromName(input) == -1) {
+      std::cout << "Error: the specified body name '" << input
+                << "' does not correspond to a valid NAIF object." << std::endl;
+      return false;
+   }
+   data.ObserverName = input;
+
+   // get the tolerance
+   std::cout << "Tolerance: " << std::endl;
+   std::getline(std::cin, input);
+   data.Tolerance = std::atof(input.c_str());
+   if (data.Tolerance < 0.0) {
+      std::cout << "Error: the tolerance value '" << data.Tolerance
+                << "' is less than zero." << std::endl;
+      return false;
+   }
+
+   return true;
+}
+
 bool CPPSpice::ParseConfigurationFile(const std::string& filename, SimulationData& data) {
    std::ifstream            file(filename);
    std::string              line;

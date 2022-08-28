@@ -20,8 +20,9 @@ namespace CPPSpice {
       const std::string&                                 participant_type,
       std::tuple<std::string, std::string, std::string>& participant_info);
 
-   bool
-   ParseConfigurationFile(const std::string& filename, CPPSpice::SimulationData& data);
+   bool QueryConfigurationDetails(SimulationData& data);
+
+   bool ParseConfigurationFile(const std::string& filename, SimulationData& data);
 
    // compiling regex is costly, so let's do it once
    const auto date_format =
