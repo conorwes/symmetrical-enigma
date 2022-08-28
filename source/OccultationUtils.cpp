@@ -98,7 +98,6 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
 
    return &result;
 }
-
 // clang-format off
 /*
 
@@ -149,6 +148,126 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
 
    C.P. Westphal     (self)
 
+- Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+- Restrictions
+
+   None.
+
+- Version
+
+   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+
+*/
+// clang-format on
+
+/*
+This is the function which is used to results of the occultation search. The
+function accepts a SpiceCell and iterates through the results.
+*/
+void cppspice::reportSearchSummary( SpiceCell* result ) {
+   SpiceInt    i;
+   SpiceDouble left;
+   SpiceDouble right;
+   SpiceChar   beginEpoch[41];
+   SpiceChar   endEpoch[41];
+
+   /*
+   Check if we've received an interrupt signal.
+   */
+   if ( gfbail_c() ) {
+      /*
+      If we've gotten here, we've trapped an interrupt signal and are ready to
+      error out.
+      */
+      gfclrh_c();
+      std::cout << "Error: Search was interrupted." << std::endl;
+   }
+   else {
+      /*
+      First check if we actually have any results.
+      */
+      if ( wncard_c( result ) == 0 ) {
+         std::cout
+            << "No occultations were found within the specified time window."
+            << std::endl;
+      }
+      else {
+         /*
+         Now we'll iterate through any/all results and report the information
+         in a user-friendly format.
+         */
+         for ( i = 0; i < wncard_c( result ); i++ ) {
+            /*
+            First we'll need to fetch the interval so we can translate it into
+            a legible format.
+            */
+            wnfetd_c( result, i, &left, &right );
+
+            /*
+            Take the lower bound and translate it into our common calendar
+            format.
+            */
+            timout_c(
+               left,
+               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+               41,
+               beginEpoch );
+            /*
+            Now do the same with the upper bound.
+            */
+            timout_c(
+               right,
+               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+               41,
+               endEpoch );
+
+            /*
+            Finally report the interval information to console.
+            */
+            std::cout << "Interval " << i << std::endl;
+            std::cout << "   Start time: " << beginEpoch << std::endl;
+            std::cout << "   Stop time:  " << endEpoch << std::endl;
+         }
+      }
+   }
+}
+// clang-format off
+/*
+
+- Brief I/O
+
+   Variable  I/O  DESCRIPTION
+   --------  ---  --------------------------------------------------
+   result     I   The results which have been output by gfocce_c.
+
+- Detailed_Input
+
+   result   a SpiceCell which contains the results of the occultation
+            analysis. This will be parsed and the results will be iterated
+            through so that the results can be reported.
+
+- Detailed_Output
+
+   The function returns void.
+
+- Error Handling
+
+   Any errors encountered in the CSPICE routines will be handled by CSPICE's
+   native error handling. Otherwise, error messages are reported, and the
+   function returns.
+
+- Particulars
+
+   None.
+
+- Literature_References
+
+   None.
+
 - Author
 
    C.P. Westphal     (self)
@@ -168,59 +287,4 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
 
 */
 // clang-format on
-
-void cppspice::reportSearchSummary( SpiceCell* result ) {
-   SpiceInt    i;
-   SpiceDouble left;
-   SpiceDouble right;
-   SpiceChar   beginEpoch[41];
-   SpiceChar   endEpoch[41];
-
-   if ( gfbail_c() ) {
-      /*
-      Clear the CSPICE interrupt indication. This is
-      an essential step for programs that continue
-      running after an interrupt; gfbail_c will
-      continue to return SPICETRUE until this step
-      has been performed.
-      */
-      gfclrh_c();
-
-      /*
-      We've trapped an interrupt signal. In a realistic
-      application, the program would continue operation
-      from this point. In this simple example, we simply
-      display a message and quit.
-      */
-      std::cout << "Error: Search was interrupted." << std::endl;
-   }
-   else {
-
-      if ( wncard_c( result ) == 0 ) {
-         printf( "No occultation was found.\n" );
-      }
-      else {
-         for ( i = 0; i < wncard_c( result ); i++ ) {
-            /*
-            fetch and display each occultation interval.
-            */
-            wnfetd_c( result, i, &left, &right );
-
-            timout_c(
-               left,
-               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-               41,
-               beginEpoch );
-            timout_c(
-               right,
-               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-               41,
-               endEpoch );
-
-            std::cout << "Interval " << i << std::endl;
-            std::cout << "   Start time: " << beginEpoch << std::endl;
-            std::cout << "   Stop time:  " << endEpoch << std::endl;
-         }
-      }
-   }
-}
+/* End OccultationUtils.cpp */

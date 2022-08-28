@@ -63,7 +63,6 @@ All of our non-program functionality lives within the cppspice namespace. This
 will ensure that everything is made available appropriately.
 */
 namespace cppspice {
-
    /*
    This is the function which is used to perform the occultation search. We
    feed in the SimulationData which was retrieved prior to this call.
