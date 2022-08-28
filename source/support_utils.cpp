@@ -157,6 +157,7 @@ bool CPPSpice::FurnishSPICEKernel(const std::string& kernel_name) {
    std::getline(std::cin, path);
 
    // Before feeding this kernel into CSPICE, let's make sure it actually exists
+   DisambiguateRelativePath(path);
    if (FILE* file = fopen(path.c_str(), "r")) {
       fclose(file);
    }
@@ -362,12 +363,15 @@ bool CPPSpice::ParseConfigurationFile(const std::string& filename, SimulationDat
       trim(identifier);
       trim(content);
       if (identifier == "PConstants") {
+         DisambiguateRelativePath(content);
          furnsh_c(content.c_str());
       }
       else if (identifier == "Timespan") {
+         DisambiguateRelativePath(content);
          furnsh_c(content.c_str());
       }
       else if (identifier == "PlanetaryEphemerides") {
+         DisambiguateRelativePath(content);
          furnsh_c(content.c_str());
       }
       else if (identifier == "LowerBoundEpoch") {
@@ -463,4 +467,16 @@ bool CPPSpice::ParseConfigurationFile(const std::string& filename, SimulationDat
    }
 
    return true;
+}
+
+void CPPSpice::DisambiguateRelativePath(std::string& path) {
+   if (path[0] = '.') {
+      std::string current_path  = _getcwd(NULL, 0);
+      auto        source_offset = current_path.rfind("source");
+      if (source_offset != std::string::npos) {
+         current_path = current_path.substr(0, source_offset);
+         path         = current_path + path.substr(2, path.length());
+         std::replace(path.begin(), path.end(), '/', '\\');
+      }
+   }
 }

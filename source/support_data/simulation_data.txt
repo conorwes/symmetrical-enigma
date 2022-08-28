@@ -1,7 +1,7 @@
 // Kernels to Furnish
-PConstants: ./include/pck00010.tpc
-Timespan: ./include/naif0012.tls
-PlanetaryEphemerides: ./include/de421.bsp
+PConstants: ./source/support_data/pck00010.tpc
+Timespan: ./source/support_data/naif0012.tls
+PlanetaryEphemerides: ./source/support_data/de421.bsp
 
 // Time Data
 LowerBoundEpoch: 2030 JAN 01 00:00:00 TDB

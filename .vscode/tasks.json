@@ -9,20 +9,16 @@
                 "/EHsc",
                 "/nologo",
                 "/Fe${workspaceFolder}\\SymmetricalEnigma.exe",
+                "/Fo${workspaceFolder}\\source\\intermediate\\",
+                "/EHsc",
                 "${file}",
                 "${workspaceFolder}\\source\\*.cpp",
                 "${workspaceFolder}\\extern\\spice\\src\\*.c",
                 "-I",
-                "${workspaceFolder}\\extern\\spice\\include",
-                "-I",
-                "${workspaceFolder}\\extern\\spice\\src",
-                "-I",
-                "${workspaceFolder}\\include",
-                "-I",
-                "${workspaceFolder}\\source",
+                "${workspaceFolder}\\extern\\spice\\include"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$msCompile"

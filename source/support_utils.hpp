@@ -24,6 +24,8 @@ namespace CPPSpice {
 
    bool ParseConfigurationFile(const std::string& filename, SimulationData& data);
 
+   void DisambiguateRelativePath(std::string& path);
+
    // compiling regex is costly, so let's do it once
    const auto date_format =
       std::regex("[0-9]{4} [A-Z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(?: TDB)?");

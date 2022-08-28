@@ -2,50 +2,38 @@
 
 SpiceCell* CPPSpice::PerformOccultationSearch(const SimulationData& data) {
 
-   SpiceBoolean bail;
-   SpiceBoolean rpt;
-
-   SPICEDOUBLE_CELL(cnfine, 200);
-   SPICEDOUBLE_CELL(result, 200);
-
-   SpiceDouble et0;
-   SpiceDouble et1;
-
+   double et0;
+   double et1;
    str2et_c(data.LowerBoundEpoch.c_str(), &et0);
    str2et_c(data.UpperBoundEpoch.c_str(), &et1);
 
+   SPICEDOUBLE_CELL(cnfine, 200);
+   SPICEDOUBLE_CELL(result, 200);
    wninsd_c(et0, et1, &cnfine);
 
    gfsstp_c(data.StepSize);
 
-   bail = SPICETRUE;
-   rpt  = SPICETRUE;
-
    gfocce_c(
-      /*ConstSpiceChar* occtyp*/ data.OccultationType.c_str(),
-      /*ConstSpiceChar* front*/ std::get<0>(data.OcculterDetails).c_str(),
-      /*ConstSpiceChar *fshape*/ std::get<1>(data.OcculterDetails).c_str(),
-      /*ConstSpiceChar *fframe*/ std::get<2>(data.OcculterDetails).c_str(),
-      /*ConstSpiceChar* back*/ std::get<0>(data.TargetDetails).c_str(),
-      /*ConstSpiceChar* bshape*/ std::get<1>(data.TargetDetails).c_str(),
-      /*ConstSpiceChar* bframe*/ std::get<2>(data.TargetDetails).c_str(),
-      /*ConstSpiceChar* abcorr*/ "LT",
-      /*ConstSpiceChar* obsrvr*/ data.ObserverName.c_str(),
-      /*SpiceDouble tol*/ data.Tolerance,
-      /*void (*udstep)(SpiceDouble et, SpiceDouble *step)*/ gfstep_c,
-      /*void (*udrefn)(SpiceDouble t1, SpiceDouble t2, SpiceBoolean s1, SpiceBoolean s2,
-         SpiceDouble *t)*/
+      data.OccultationType.c_str(),
+      std::get<0>(data.OcculterDetails).c_str(),
+      std::get<1>(data.OcculterDetails).c_str(),
+      std::get<2>(data.OcculterDetails).c_str(),
+      std::get<0>(data.TargetDetails).c_str(),
+      std::get<1>(data.TargetDetails).c_str(),
+      std::get<2>(data.TargetDetails).c_str(),
+      "LT",
+      data.ObserverName.c_str(),
+      data.Tolerance,
+      gfstep_c,
       gfrefn_c,
-      /*SpiceBoolean rpt*/ rpt,
-      /*void (*udrepi)(SpiceCell *cnfine, ConstSpiceChar *srcpre, ConstSpiceChar
-       *srcsuf)*/
+      true,
       gfrepi_c,
-      /*void (*udrepu)(SpiceDouble ivbeg, SpiceDouble ivend, SpiceDouble et)*/ gfrepu_c,
-      /*void (*udrepf)()*/ gfrepf_c,
-      /*SpiceBoolean bail*/ bail,
-      /*SpiceBoolean (*udbail)()*/ gfbail_c,
-      /*SpiceCell *cnfine*/ &cnfine,
-      /*SpiceCell *result*/ &result);
+      gfrepu_c,
+      gfrepf_c,
+      true,
+      gfbail_c,
+      &cnfine,
+      &result);
 
    return &result;
 }
@@ -73,12 +61,7 @@ void CPPSpice::ReportSummary(SpiceCell* result) {
       from this point. In this simple example, we simply
       display a message and quit.
       */
-      printf(
-         "\nSearch was interrupted.\n\nThis message "
-         "was written after an interrupt signal\n"
-         "was trapped. By default, the program "
-         "would have terminated \nbefore this message "
-         "could be written.\n\n");
+      std::cout << "Error: Search was interrupted." << std::endl;
    }
    else {
 

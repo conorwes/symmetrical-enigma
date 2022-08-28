@@ -37,6 +37,11 @@ int main() {
    else {
       std::cout << "Specify your configuration file's path: " << std::endl;
       std::getline(std::cin, input);
+
+      // when running from debugger, the working directory is source...which doesn't makes
+      // sense, but VS code is giving me some trouble
+      DisambiguateRelativePath(input);
+
       if (FILE* file = fopen(input.c_str(), "r")) {
          fclose(file);
       }
