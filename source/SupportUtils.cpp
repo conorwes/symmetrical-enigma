@@ -1318,7 +1318,7 @@ void cppspice::disambiguateRelativePath( std::string& path ) {
    go ahead and concatenate the working directory and the relative path to get
    a disambiguated path.
    */
-   if ( path[0] = '.' ) {
+   if ( path[0] == '.' ) {
       /*
       Get the current path.
       */
