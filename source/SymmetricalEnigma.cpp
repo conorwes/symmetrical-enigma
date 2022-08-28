@@ -207,3 +207,4 @@ int main() {
 
 */
 // clang-format on
+/* End SymmetricalEnigma.cpp */

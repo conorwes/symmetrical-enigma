@@ -61,19 +61,32 @@ This is the function which is used to perform the occultation search. We
 feed in the SimulationData which was retrieved prior to this call.
 */
 SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
-
-   // TODO - clean this up
+   /*
+   First, let's convert the epoch bounds to doubles representing seconds from
+   J2000.
+   */
    SpiceDouble lowerEpochTime;
    SpiceDouble upperEpochTime;
    str2et_c( data.LowerBoundEpoch.c_str(), &lowerEpochTime );
    str2et_c( data.UpperBoundEpoch.c_str(), &upperEpochTime );
 
+   /*
+   Next, let's configure the cnfine using our bounds.
+   */
    SPICEDOUBLE_CELL( cnfine, 200 );
    SPICEDOUBLE_CELL( result, 200 );
    wninsd_c( lowerEpochTime, upperEpochTime, &cnfine );
 
+   /*
+   For this program, we're going to use constant step size. This is a tradeoff
+   between development complexity and functionality, and the performance
+   associated with a constant stepsize seems acceptable.
+   */
    gfsstp_c( data.StepSize );
 
+   /*
+   Finally, feed our SimulationData into gfocce_c.
+   */
    gfocce_c(
       data.OccultationType.c_str(),
       std::get<0>( data.OcculterDetails ).c_str(),
