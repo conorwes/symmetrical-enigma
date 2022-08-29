@@ -90,7 +90,7 @@ int main() {
    /*
    Compare our input against the valid input types.
    */
-   DefinitionMode definitionMode;
+   DefinitionMode definitionMode{ DefinitionMode::CONSOLE };
    if ( input == "CONSOLE" ) {
       definitionMode = DefinitionMode::CONSOLE;
    }

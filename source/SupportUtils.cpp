@@ -64,8 +64,8 @@ Ultimately this just gets used for validation that we're working with real
 objects.
 */
 int cppspice::getNAIFIDFromName( const std::string& name ) {
-   SpiceInt     code( 0 );
-   SpiceBoolean found( false );
+   SpiceInt     code{ 0 };
+   SpiceBoolean found{ false };
    bodn2c_c( name.c_str(), &code, &found );
 
    if ( found ) {
@@ -412,15 +412,16 @@ bool cppspice::areValidDateBounds(
    const std::string& upperDateBound ) {
 
    /*
-   If we've already gotten here, we can be confident that the string format is
-   good for literal comparison, so we can leverage c++'s native string
-   comparison functionality.
+   For the sake of comparison, convert the dates to doubles
    */
-
+   SpiceDouble lowerEpochDouble{ 0.0 };
+   SpiceDouble upperEpochDouble{ 0.0 };
+   str2et_c( lowerDateBound.c_str(), &lowerEpochDouble );
+   str2et_c( upperDateBound.c_str(), &upperEpochDouble );
    /*
    First, let's check that the dates are not identical.
    */
-   if ( lowerDateBound == upperDateBound ) {
+   if ( lowerEpochDouble == upperEpochDouble ) {
       std::cout << "Error: lower and upper bounds are identical."
                 << std::endl;
       return false;
@@ -429,7 +430,7 @@ bool cppspice::areValidDateBounds(
    /*
    Next, ensure that the lower bound is not a date after the upper bound.
    */
-   if ( lowerDateBound > upperDateBound ) {
+   if ( lowerEpochDouble > upperEpochDouble ) {
       std::cout << "Error: lower bound is greater than the upper bound."
                 << std::endl;
       return false;
@@ -481,7 +482,7 @@ bool cppspice::furnishSPICEKernel( const std::string& kernelName ) {
    /*
    First prompt for the kernel path.
    */
-   std::string path;
+   std::string path{ "" };
    std::cout << "Specify the " << kernelName
              << " kernel's path: " << std::endl;
    std::getline( std::cin, path );
@@ -551,7 +552,7 @@ bool cppspice::queryParticipantDetails(
    /*
    First prompt for the body name.
    */
-   std::string input;
+   std::string input{ "" };
    std::cout << participantType << " Body: " << std::endl;
    std::getline( std::cin, input );
 
@@ -668,7 +669,7 @@ SimulationData which then gets fed into our occultation analysis.
 */
 bool cppspice::queryConfigurationDetails( SimulationData& data ) {
 
-   std::string input;
+   std::string input{ "" };
 
    /*
    Before we do anything else, let's furnish the kernels we'll need for this
@@ -1074,8 +1075,8 @@ bool cppspice::parseConfigurationFile(
    The first step is parsing the file. We can assume that the filename has
    been validated before we get here.
    */
-   std::ifstream            file( filename );
-   std::string              line;
+   std::ifstream            file{ filename };
+   std::string              line{ "" };
    std::vector<std::string> fileContents;
    while ( std::getline( file, line ) ) {
       fileContents.push_back( line );
@@ -1085,8 +1086,9 @@ bool cppspice::parseConfigurationFile(
    This is a little ugly, but we need to now iterate through each member in
    the fileContents vector so we can populate the SimulationData.
    */
-   std::string identifier, content;
-   char        delimiter = ':';
+   std::string identifier{ "" };
+   std::string content{ "" };
+   char        delimiter{ ':' };
    for ( auto& c : fileContents ) {
       identifier = c.substr( 0, c.find( delimiter ) );
       content    = c.substr( c.find( delimiter ) + 1, c.length() );

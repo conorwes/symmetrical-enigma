@@ -65,8 +65,8 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
    First, let's convert the epoch bounds to doubles representing seconds from
    J2000.
    */
-   SpiceDouble lowerEpochTime;
-   SpiceDouble upperEpochTime;
+   SpiceDouble lowerEpochTime{ 0.0 };
+   SpiceDouble upperEpochTime{ 0.0 };
    str2et_c( data.LowerBoundEpoch.c_str(), &lowerEpochTime );
    str2et_c( data.UpperBoundEpoch.c_str(), &upperEpochTime );
 
@@ -95,6 +95,10 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
       std::get<0>( data.TargetDetails ).c_str(),
       std::get<1>( data.TargetDetails ).c_str(),
       std::get<2>( data.TargetDetails ).c_str(),
+      /*
+      TODO - Here I've made the simplification of just including the LT
+      correction. This should be expanded.
+      */
       "LT",
       data.ObserverName.c_str(),
       data.Tolerance,
@@ -182,9 +186,9 @@ This is the function which is used to results of the occultation search. The
 function accepts a SpiceCell and iterates through the results.
 */
 void cppspice::reportSearchSummary( SpiceCell* result ) {
-   SpiceInt    i;
-   SpiceDouble left;
-   SpiceDouble right;
+   SpiceInt    i{ 0 };
+   SpiceDouble left{ 0.0 };
+   SpiceDouble right{ 0.0 };
    SpiceChar   beginEpoch[41];
    SpiceChar   endEpoch[41];
 
