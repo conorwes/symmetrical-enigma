@@ -52,8 +52,10 @@
 // clang-format on
 
 /*
-We only need to include the corresponding header file.
+We need the corresponding header and the fstream header.
 */
+#include <fstream>
+
 #include "OccultationUtils.hpp"
 
 /*
@@ -217,6 +219,8 @@ void cppspice::reportSearchSummary( SpiceCell* result ) {
          Now we'll iterate through any/all results and report the information
          in a user-friendly format.
          */
+
+         std::ofstream out( "output.txt" );
          for ( i = 0; i < wncard_c( result ); i++ ) {
             /*
             First we'll need to fetch the interval so we can translate it into
@@ -248,7 +252,16 @@ void cppspice::reportSearchSummary( SpiceCell* result ) {
             std::cout << "Interval " << i << std::endl;
             std::cout << "   Start time: " << beginEpoch << std::endl;
             std::cout << "   Stop time:  " << endEpoch << std::endl;
+
+            /*
+            Also report to file.
+            */
+            out << "Interval " << i << std::endl;
+            out << "   Start time: " << beginEpoch << std::endl;
+            out << "   Stop time: " << endEpoch << std::endl;
          }
+
+         out.close();
       }
    }
 }
