@@ -64,8 +64,8 @@ feed in the SimulationData which was retrieved prior to this call.
 */
 SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
    /*
-   First, let's convert the epoch bounds to doubles representing seconds from
-   J2000.
+   First, let's convert the epoch bounds to doubles representing seconds
+   from J2000.
    */
    SpiceDouble lowerEpochTime{ 0.0 };
    SpiceDouble upperEpochTime{ 0.0 };
@@ -89,7 +89,20 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
    /*
    Finally, feed our SimulationData into gfocce_c.
    */
-   gfocce_c(
+   gfoclt_c(
+      data.OccultationType.c_str(),
+      std::get<0>( data.OcculterDetails ).c_str(),
+      std::get<1>( data.OcculterDetails ).c_str(),
+      std::get<2>( data.OcculterDetails ).c_str(),
+      std::get<0>( data.TargetDetails ).c_str(),
+      std::get<1>( data.TargetDetails ).c_str(),
+      std::get<2>( data.TargetDetails ).c_str(),
+      "LT",
+      data.ObserverName.c_str(),
+      data.StepSize,
+      &cnfine,
+      &result );
+   /*gfocce_c(
       data.OccultationType.c_str(),
       std::get<0>( data.OcculterDetails ).c_str(),
       std::get<1>( data.OcculterDetails ).c_str(),
@@ -101,19 +114,19 @@ SpiceCell* cppspice::performOccultationSearch( const SimulationData& data ) {
       TODO - Here I've made the simplification of just including the LT
       correction. This should be expanded.
       */
-      "LT",
-      data.ObserverName.c_str(),
-      data.Tolerance,
-      gfstep_c,
-      gfrefn_c,
-      true,
-      gfrepi_c,
-      gfrepu_c,
-      gfrepf_c,
-      true,
-      gfbail_c,
-      &cnfine,
-      &result );
+   /*"LT",
+   data.ObserverName.c_str(),
+   data.Tolerance,
+   gfstep_c,
+   gfrefn_c,
+   true,
+   gfrepi_c,
+   gfrepu_c,
+   gfrepf_c,
+   true,
+   gfbail_c,
+   &cnfine,
+   &result );*/
 
    return &result;
 }

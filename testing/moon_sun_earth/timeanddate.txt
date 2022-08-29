@@ -1,0 +1,24 @@
+2030 Jun 01	06:27:55	Annular
+2030 Nov 25	06:50:19	Total
+2031 May 21	07:14:49	Annular
+2031 Nov 14	21:06:11	Total
+2032 May 09	13:25:30	Annular
+2032 Nov 03	05:32:56	Partial
+2033 Mar 30	18:01:15	Total
+2033 Sep 23	13:53:17	Partial
+2034 Mar 20	10:17:25	Total
+2034 Sep 12	16:18:06	Annular
+2035 Mar 09	23:04:32	Annular
+2035 Sep 02	01:55:30	Total
+2036 Feb 27	04:45:35	Partial
+2036 Jul 23	10:30:45	Partial
+2036 Aug 21	17:24:30	Partial
+2037 Jan 16	09:47:32	Partial
+2037 Jul 13	02:39:13	Total
+2038 Jan 05	13:45:51	Annular
+2038 Jul 02	13:31:32	Annular
+2038 Dec 26	00:58:46	Total
+2039 Jun 21	17:11:29	Annular
+2039 Dec 15	16:22:22	Total
+
+timeanddate.com/eclipse/list.html?starty=2030

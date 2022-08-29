@@ -54,7 +54,10 @@
         "zzfcstring.c": "cpp",
         "bodc2n_c.c": "cpp",
         "fstream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "ratio": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     },
     "editor.formatOnSave": true,
     "editor.formatOnType": true,

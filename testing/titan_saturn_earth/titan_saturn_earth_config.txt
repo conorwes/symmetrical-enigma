@@ -1,0 +1,21 @@
+// Kernels to Furnish
+PConstants: ./testing/pck00010.tpc
+Timespan: ./testing/naif0012.tls
+PlanetaryEphemerides: ./testing/sat441.bsp
+PlanetaryEphemerides: ./testing/de421.bsp
+
+// Time Data
+LowerBoundEpoch: 2008 SEP 01 00:00:00 TDB
+UpperBoundEpoch: 2009 JAN 01 00:00:00 TDB
+StepSize: 900.0
+
+// Simulation Data
+OccultationType: ANNULAR
+OccultingBody: TITAN
+OccultingBodyShape: ELLIPSOID
+OccultingBodyFrame: IAU_TITAN
+TargetBody: SATURN
+TargetBodyShape: ELLIPSOID
+TargetBodyFrame: IAU_SATURN
+ObservingBody: EARTH
+Tolerance: 1e-6
