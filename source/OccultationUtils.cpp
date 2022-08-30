@@ -72,6 +72,10 @@ bool cppspice::isOccultedAtEpoch(
    const SpiceChar*  targetFrame,
    const SpiceChar*  targetName,
    SpiceBoolean&     isOcculted ) {
+
+   /*
+   First, we need to get the J2000 observer position.
+   */
    SpiceDouble earthToObserverJ2000[6];
    SpiceDouble lt{ 0.0 };
    spkez_c(
@@ -83,6 +87,9 @@ bool cppspice::isOccultedAtEpoch(
       earthToObserverJ2000,
       &lt );
 
+   /*
+   Similarly, get the J2000 occulter position.
+   */
    SpiceDouble earthToOcculterJ2000[6];
    spkez_c(
       occulterID,
@@ -93,6 +100,9 @@ bool cppspice::isOccultedAtEpoch(
       earthToOcculterJ2000,
       &lt );
 
+   /*
+   We can now calculate the J2000 occulter-to-observer vector.
+   */
    SpiceDouble occulterToObserverJ2000[3];
    occulterToObserverJ2000[0] =
       ( earthToOcculterJ2000[0] * -1.0 ) + earthToObserverJ2000[0];
@@ -101,9 +111,15 @@ bool cppspice::isOccultedAtEpoch(
    occulterToObserverJ2000[2] =
       ( earthToOcculterJ2000[2] * -1.0 ) + earthToObserverJ2000[2];
 
+   /*
+   Next, let's get the J2000 target position.
+   */
    SpiceDouble earthToTargetJ2000[6];
    spkez_c( targetID, epoch, "j2000", "LT", 399, earthToTargetJ2000, &lt );
 
+   /*
+   We can now calculate the J2000 occulter-to-observer vector.
+   */
    SpiceDouble occulterToTargetJ2000[3];
    occulterToTargetJ2000[0] =
       ( earthToOcculterJ2000[0] * -1.0 ) + earthToTargetJ2000[0];
@@ -112,33 +128,59 @@ bool cppspice::isOccultedAtEpoch(
    occulterToTargetJ2000[2] =
       ( earthToOcculterJ2000[2] * -1.0 ) + earthToTargetJ2000[2];
 
+   /*
+   Going forward, we'll want to evaluate everything in the occulter-fixed
+   frame, so get the rotation matrix.
+   */
    SpiceDouble rotate[3][3];
    pxform_c( "j2000", occulterFrame, epoch, rotate );
 
+   /*
+   Translate the occulter-to-observer vector to occulter-fixed.
+   */
    SpiceDouble occulterToObserverFixed[3];
    mxv_c( rotate, occulterToObserverJ2000, occulterToObserverFixed );
 
+   /*
+   Translate the occulter-to-target vector to occulter-fixed.
+   */
    SpiceDouble occulterToTargetFixed[3];
    mxv_c( rotate, occulterToTargetJ2000, occulterToTargetFixed );
 
+   /*
+   We want to spherize the occulter to account for flattening. So, get the
+   radii from the kernel we've already furnished.
+   */
    SpiceInt    n;
    SpiceDouble radii[3];
    bodvrd_c( occulterName, "RADII", 3, &n, radii );
+
+   /*
+   The equatorial radius will be used elsewhere, so save that off.
+   */
    SpiceDouble occulterRadiusEq = radii[0];
 
+   /*
+   Now we can scale the relevant vectors.
+   */
    SpiceDouble scaleFactor = radii[0] / radii[2];
-
    occulterToTargetFixed[2] *= scaleFactor;
    occulterToObserverFixed[2] *= scaleFactor;
 
+   /*
+   In addition to scaling the relevant vectors, we also need to scale the
+   target.
+   */
    bodvrd_c( targetName, "RADII", 3, &n, radii );
-
-   radii[2] *= ( radii[0] / radii[2] );
-
    radii[0] *= scaleFactor;
    radii[1] *= scaleFactor;
    radii[2] *= scaleFactor;
 
+   /*
+   Later in our algorithm, we'll need to have the observer-to-occulter and
+   observer-to-target vectors. Fortunately, we already have what we need, just
+   need to reverse the direction.
+   */
    SpiceDouble observerToOcculterFixed[3];
    observerToOcculterFixed[0] = occulterToObserverFixed[0] * -1.0;
    observerToOcculterFixed[1] = occulterToObserverFixed[1] * -1.0;
@@ -152,44 +194,138 @@ bool cppspice::isOccultedAtEpoch(
    observerToTargetFixed[2] =
       occulterToTargetFixed[2] + observerToOcculterFixed[2];
 
+   /*
+   Perform a quick check to ensure that the observer is not within the
+   target's radius.
+   */
    SpiceDouble distance = calculateMagnitude( observerToTargetFixed );
-
    if ( distance < radii[0] ) {
-      std::cout << "Error: body is within the target's radius." << std::endl;
+      std::cout << "Error: observer is within the target's radius."
+                << std::endl;
       return false;
    }
 
-   SpiceDouble halfAngle = asin( radii[0] / distance );
-
-   if (
-      calculateMagnitude( observerToOcculterFixed ) >
-      calculateMagnitude( observerToTargetFixed ) )
-   {
+   /*
+   Perform another quick check - if the observer-to-occulter is larger than
+   the observer-to-target, the occulter is on the far side of the target, and
+   thus can't be occulted.
+   */
+   if ( calculateMagnitude( observerToOcculterFixed ) > distance ) {
       isOcculted = false;
       return true;
    }
 
-   auto        v1                          = observerToTargetFixed;
-   auto        v2                          = observerToOcculterFixed;
-   SpiceDouble v1Length                    = calculateMagnitude( v1 );
-   SpiceDouble v2Length                    = calculateMagnitude( v2 );
-   SpiceDouble targetOcculterObserverAngle = acos(
-      ( v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] ) /
-      ( v1Length * v2Length ) );
+   /*
+   Get the half angle between the observer-to-target vector and the target's
+   radius.
+   */
+   SpiceDouble halfAngle = asin( radii[0] / distance );
 
+   /*
+   Now we can calculate the occulter half angle/body width.
+   */
    SpiceDouble occulterRadius = calculateMagnitude( occulterToObserverFixed );
    SpiceDouble bodyHalfAngle{ 0.0 };
+
+   /*
+   If the radius is less than the body radius, we've probably just got numeric
+   noise -> asin(1) -> pi/2. So let's get that specifically.
+   */
    if ( occulterRadius < occulterRadiusEq ) {
       bodyHalfAngle = PI / 2;
    }
    else {
+      /*
+      Otherwise, the body half angle is the asin of the ratio between our
+      known equatorial radius, and the computed one.
+      */
       bodyHalfAngle = asin( occulterRadiusEq / occulterRadius );
    }
 
+   /*
+   Almost there...now, get the target-occulter-observer angle.
+   */
+   SpiceDouble v1Length = calculateMagnitude( observerToTargetFixed );
+   SpiceDouble v2Length = calculateMagnitude( observerToOcculterFixed );
+   SpiceDouble targetOcculterObserverAngle = acos(
+      ( observerToTargetFixed[0] * observerToOcculterFixed[0] +
+        observerToTargetFixed[1] * observerToOcculterFixed[1] +
+        observerToTargetFixed[2] * observerToOcculterFixed[2] ) /
+      ( v1Length * v2Length ) );
+
+   /*
+   Finally! If the target-occulter-observer angle is smaller than the sum of
+   the target half-angle and the occulter half angle, we're occulted!
+   */
    isOcculted = targetOcculterObserverAngle < halfAngle + bodyHalfAngle;
 
    return true;
 }
+// clang-format off
+/*
+
+- Brief I/O
+
+   Variable     I/O  DESCRIPTION
+   --------     ---  --------------------------------------------------
+   SpiceInt      I   The NAIF ID of the target.
+   SpiceInt      I   The NAIF ID of the occulter.
+   SpiceInt      I   The NAIF ID of the observer.
+   SpiceDouble   I   The epoch being evaluated.
+   SpiceChar*    I   The name of the occulter's frame.
+   SpiceChar*    I   The name of the occulter.
+   SpiceChar*    I   The name of the target's frame.
+   SpiceChar*    I   The name of the target.
+   SpiceBoolean  I   Whether an occultation is happening.
+
+- Detailed_Input
+
+   targetID      an int representing the NAIF ID of the target object.
+   occulterID    an int representing the NAIF ID of the occulter object.
+   observerID    an int representing the NAIF ID of the observer object.
+   epoch         a double representing the epoch being evaluated.
+   occulterFrame the name of the occulter's frame.
+   occulterName  the name of the occulter.
+   targetFrame   the name of the target's frame.
+   targetName    the name of the target.
+   isOcculted    a boolean representing whether an occultation is happening.
+
+- Detailed_Output
+
+   The function returns true if no errors are encountered.
+
+- Error Handling
+
+   CSPICE components are handled using the native error handling. Otherwise, errors
+   are reported and false is returned.
+
+- Particulars
+
+   None.
+
+- Literature_References
+
+   None.
+
+- Author
+
+   C.P. Westphal     (self)
+
+- Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+- Restrictions
+
+   None.
+
+- Version
+
+   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+
+*/
+// clang-format on
 
 /*
 A bisection algorithm to find the transition.
@@ -207,6 +343,9 @@ bool cppspice::bisectEpochs(
    const SpiceChar*   targetFrame,
    const SpiceChar*   targetName,
    const SpiceDouble  tolerance ) {
+   /*
+   Since we're going to do a lot of iteration, define our workers here.
+   */
    SpiceDouble  left  = lowerEpoch;
    SpiceDouble  right = upperEpoch;
    SpiceDouble  workingEpoch{ 0.0 };
@@ -226,6 +365,9 @@ bool cppspice::bisectEpochs(
    while ( left < right && ( abs( right - left ) > tolerance ) &&
            numIterations < 1000 )
    {
+      /*
+      Increase the iteration count.
+      */
       numIterations++;
 
       /*
@@ -266,10 +408,22 @@ bool cppspice::bisectEpochs(
       */
       if ( abs( right - left ) < tolerance ) {
 
-         std::cout << "Transition found: ";
+         std::cout
+            << ( !leftOcculted && rightOcculted ? "Occultation started: "
+                                                : "Occultation ended: " );
          SpiceChar utcOut[41];
          et2utc_c( ( left + right ) / 2, "C", 0, 41, utcOut );
          std::cout << utcOut << std::endl;
+      }
+      else if ( numIterations >= 1000 ) {
+         /*
+         If we exceed the iteration count, something has gone wrong, so error
+         out.
+         */
+         std::cout << "Error: unable to find the transition between '"
+                   << lowerEpoch << "' and '" << upperEpoch << "'."
+                   << std::endl;
+         return false;
       }
    }
 
@@ -442,24 +596,39 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
    }
 
    /*
+   If no refined intervals have been found, then report as such.
+   */
+   if ( refinedIntervals.size() == 0 ) {
+      std::cout << "No occultation events were detected." << std::endl;
+      /*
+      Note: even though it didn't find any events, it didn't error...just
+      didn't find anything. So return true.
+      */
+      return true;
+   }
+
+   /*
    Now, for each interval, perform the bisection algorithm. All events will be
    reported as part of this routine.
    */
    for ( auto& p : refinedIntervals ) {
       // perform bisection within the interval
-      bisectEpochs(
-         targetID,
-         occulterID,
-         observerID,
-         p.first.first,
-         p.first.second,
-         p.second.first,
-         p.second.second,
-         std::get<2>( data.OcculterDetails ).c_str(),
-         std::get<0>( data.OcculterDetails ).c_str(),
-         std::get<2>( data.TargetDetails ).c_str(),
-         std::get<0>( data.TargetDetails ).c_str(),
-         data.Tolerance );
+      if ( !bisectEpochs(
+              targetID,
+              occulterID,
+              observerID,
+              p.first.first,
+              p.first.second,
+              p.second.first,
+              p.second.second,
+              std::get<2>( data.OcculterDetails ).c_str(),
+              std::get<0>( data.OcculterDetails ).c_str(),
+              std::get<2>( data.TargetDetails ).c_str(),
+              std::get<0>( data.TargetDetails ).c_str(),
+              data.Tolerance ) )
+      {
+         return false;
+      }
    }
 
    return true;
