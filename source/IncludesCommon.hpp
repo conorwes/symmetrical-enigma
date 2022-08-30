@@ -148,5 +148,18 @@ namespace cppspice {
    const std::vector<std::string> validShapeTypes = {
       "ELLIPSOID",
       "POINT" /*, "DSK/UNPRIORITIZED"*/ };
+
+   /*
+   Who doesn't want some tasty pi?
+   */
+   constexpr double PI = 3.14159265358979323846;
+
+   /*
+   Just a simple lambda to calculate the magnitude of a 3d vector for
+   convenience.
+   */
+   auto calculateMagnitude = []( const SpiceDouble* v ) -> SpiceDouble {
+      return sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+   };
 }   // namespace cppspice
     /* End IncludesCommon.hpp */

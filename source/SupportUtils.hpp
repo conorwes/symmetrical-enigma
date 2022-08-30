@@ -110,7 +110,7 @@ namespace cppspice {
 
    /*
    This utility queries the user for a configuration file, which is then
-   parsed. The data retrieved from the configuration file is fed into a
+   parsed. The data retrieved from the configuration file are fed into a
    SimulationData object, which is then used in the occulation analysis.
    */
    bool parseConfigurationFile(

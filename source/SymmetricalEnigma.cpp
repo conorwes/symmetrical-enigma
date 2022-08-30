@@ -154,12 +154,14 @@ int main() {
    /*
    Finally, the moment we've all been waiting for: let's perform our search.
    */
-   results = cppspice::performOccultationSearch( std::move( data ) );
+   cppspice::performOccultationSearch_native( std::move( data ) );
+   // results = cppspice::performOccultationSearch_cspice( std::move( data )
+   // );
 
    /*
    Now that we have our results, we can go ahead and report the data.
    */
-   cppspice::reportSearchSummary( std::move( results ) );
+   // cppspice::reportSearchSummary( std::move( results ) );
 
    return 0;
 }

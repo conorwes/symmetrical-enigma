@@ -64,10 +64,32 @@ will ensure that everything is made available appropriately.
 */
 namespace cppspice {
    /*
-   This is the function which is used to perform the occultation search. We
-   feed in the SimulationData which was retrieved prior to this call.
+   A function which determines whether the target is occulted at a specified
+   epoch.
+    */
+   bool isOccultedAtEpoch(
+      const SpiceInt    targetID,
+      const SpiceInt    occulterID,
+      const SpiceInt    observerID,
+      const SpiceDouble epoch,
+      const SpiceChar*  occulterFrame,
+      const SpiceChar*  occulterName,
+      const SpiceChar*  targetFrame,
+      const SpiceChar*  targetName,
+      SpiceBoolean&     isOcculted );
+
+   /*
+   This is a function which is used to perform the occultation search using
+   a custom written algorithm.
+    */
+   bool performOccultationSearch_native( const SimulationData& data );
+
+   /*
+   This is the function which is used to perform the occultation search using
+   the cspice gfoclt_c routine. We feed in the SimulationData which was
+   retrieved prior to this call.
    */
-   SpiceCell* performOccultationSearch( const SimulationData& data );
+   SpiceCell* performOccultationSearch_cspice( const SimulationData& data );
 
    /*
    This is a function which can be used to iterate through the results from
