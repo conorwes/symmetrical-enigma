@@ -490,7 +490,7 @@ bool cppspice::furnishSPICEKernel( const std::string& kernelName ) {
    /*
    Before feeding the kernel into CSPICE, we need to ensure it exists.
    */
-   disambiguateRelativePath( path );
+   disambigRelPath( path );
    if ( FILE* file = fopen( path.c_str(), "r" ) ) {
       fclose( file );
    }
@@ -671,7 +671,7 @@ This is a utility to query a user for all of the user-specified components
 of the analysis using the console. The data are then used to populate the
 SimulationData which then gets fed into our occultation analysis.
 */
-bool cppspice::queryConfigurationDetails(
+bool cppspice::queryConfigDetails(
    SimulationData&  data,
    AlgorithmChoice& choice ) {
 
@@ -738,7 +738,7 @@ bool cppspice::queryConfigurationDetails(
    */
    if ( choice == AlgorithmChoice::SPICE ) {
       std::cout << "Occultation Type: " << std::endl;
-      for ( auto& type : validOccultationTypes ) {
+      for ( auto& type : validOcclTypes ) {
          std::cout << "- " << type << std::endl;
       }
       std::getline( std::cin, input );
@@ -748,13 +748,13 @@ bool cppspice::queryConfigurationDetails(
       work.
       */
       auto type_it = std::find_if(
-         validOccultationTypes.begin(),
-         validOccultationTypes.end(),
+         validOcclTypes.begin(),
+         validOcclTypes.end(),
          [&input]( const std::string& type ) {
             return type == input;
          } );
 
-      if ( type_it == validOccultationTypes.end() ) {
+      if ( type_it == validOcclTypes.end() ) {
          std::cout << "Error: the specified occultation type '" << input
                    << "' is not a valid option." << std::endl;
          return false;
@@ -854,7 +854,7 @@ This utility queries the user for a configuration file, which is then
 parsed. The data retrieved from the configuration file is fed into a
 SimulationData object, which is then used in the occulation analysis.
 */
-bool cppspice::parseConfigurationFile(
+bool cppspice::parseConfigFile(
    const std::string& filename,
    SimulationData&    data ) {
 
@@ -1114,7 +1114,7 @@ bool cppspice::parseConfigurationFile(
          For each of the kernels, make sure we can disambiguate the
          relative paths and then attempt to furnish the kernel.
          */
-         disambiguateRelativePath( content );
+         disambigRelPath( content );
          furnsh_c( content.c_str() );
       }
       else if ( identifier == "Timespan" ) {
@@ -1122,7 +1122,7 @@ bool cppspice::parseConfigurationFile(
          For each of the kernels, make sure we can disambiguate the
          relative paths and then attempt to furnish the kernel.
          */
-         disambiguateRelativePath( content );
+         disambigRelPath( content );
          furnsh_c( content.c_str() );
       }
       else if ( identifier == "PlanetaryEphemerides" ) {
@@ -1130,7 +1130,7 @@ bool cppspice::parseConfigurationFile(
          For each of the kernels, make sure we can disambiguate the
          relative paths and then attempt to furnish the kernel.
          */
-         disambiguateRelativePath( content );
+         disambigRelPath( content );
          furnsh_c( content.c_str() );
       }
       else if ( identifier == "LowerBoundEpoch" ) {
@@ -1173,13 +1173,13 @@ bool cppspice::parseConfigurationFile(
          Retrieve the occultation type and ensure that it is valid.
          */
          auto type_it = std::find_if(
-            validOccultationTypes.begin(),
-            validOccultationTypes.end(),
+            validOcclTypes.begin(),
+            validOcclTypes.end(),
             [&content]( const std::string& type ) {
                return type == content;
             } );
 
-         if ( type_it == validOccultationTypes.end() ) {
+         if ( type_it == validOcclTypes.end() ) {
             std::cout << "Error: the value specified for '" << identifier
                       << "' is invalid." << std::endl;
             return false;
@@ -1329,7 +1329,7 @@ bool cppspice::parseConfigurationFile(
 This is a simple utility to take relative paths and ensure that they are
 translated to the correct path.
 */
-void cppspice::disambiguateRelativePath( std::string& path ) {
+void cppspice::disambigRelPath( std::string& path ) {
    /*
    If the path starts with a period, we're using a relative path. We'll
    then go ahead and concatenate the working directory and the relative

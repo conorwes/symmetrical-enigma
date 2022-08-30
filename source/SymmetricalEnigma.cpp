@@ -141,9 +141,9 @@ int main() {
    if ( definitionMode == DefinitionMode::CONSOLE ) {
       /*
       If we're working with console inputs, initialize the data here, and then
-      drop into the queryConfigurationDetails function.
+      drop into the queryConfigDetails function.
       */
-      if ( !queryConfigurationDetails( data, algorithmChoice ) ) {
+      if ( !queryConfigDetails( data, algorithmChoice ) ) {
          return 1;
       }
    }
@@ -158,7 +158,7 @@ int main() {
       /*
       In case we have a relative directory, let's disambiguate just in case.
       */
-      disambiguateRelativePath( input );
+      disambigRelPath( input );
 
       /*
       Now, check if the file exists.
@@ -174,9 +174,9 @@ int main() {
 
       /*
       At this point, we're confident the file exists, so let's drop into
-      parseConfigurationFile to configure our SimulationData.
+      parseConfigFile to configure our SimulationData.
       */
-      if ( !cppspice::parseConfigurationFile( input, data ) )
+      if ( !cppspice::parseConfigFile( input, data ) )
          return 1;
    }
 
@@ -184,11 +184,10 @@ int main() {
    Finally, the moment we've all been waiting for: let's perform our search.
    */
    if ( algorithmChoice == AlgorithmChoice::CUSTOM ) {
-      cppspice::performOccultationSearch_native( std::move( data ) );
+      cppspice::performCustOccSrch( std::move( data ) );
    }
    else {
-      results =
-         cppspice::performOccultationSearch_cspice( std::move( data ) );
+      results = cppspice::performCSPICEOccSrch( std::move( data ) );
 
       /*
       Now that we have our results, we can go ahead and report the data.

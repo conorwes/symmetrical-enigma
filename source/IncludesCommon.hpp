@@ -147,7 +147,7 @@ namespace cppspice {
    Occultation type is useful in several places, so it is useful to have a
    defined list of valid options here.
    */
-   const std::vector<std::string> validOccultationTypes =
+   const std::vector<std::string> validOcclTypes =
       { "FULL", "ANNULAR", "PARTIAL", "ANY" };
 
    /*

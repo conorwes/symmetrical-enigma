@@ -107,22 +107,19 @@ namespace cppspice {
    of the analysis using the console. The data are then used to populate the
    SimulationData which then gets fed into our occultation analysis.
    */
-   bool
-   queryConfigurationDetails( SimulationData& data, AlgorithmChoice& choice );
+   bool queryConfigDetails( SimulationData& data, AlgorithmChoice& choice );
 
    /*
    This utility queries the user for a configuration file, which is then
    parsed. The data retrieved from the configuration file are fed into a
    SimulationData object, which is then used in the occulation analysis.
    */
-   bool parseConfigurationFile(
-      const std::string& filename,
-      SimulationData&    data );
+   bool parseConfigFile( const std::string& filename, SimulationData& data );
 
    /*
    This is a simple utility to take relative paths and ensure that they are
    translated to the correct path.
    */
-   void disambiguateRelativePath( std::string& path );
+   void disambigRelPath( std::string& path );
 }   // namespace cppspice
     /* End SupportUtils.hpp */

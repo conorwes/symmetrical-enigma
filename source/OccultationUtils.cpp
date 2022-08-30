@@ -507,7 +507,7 @@ bool cppspice::bisectEpochs(
 This is a function which is used to perform the occultation search using
 a custom written algorithm.
 */
-bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
+bool cppspice::performCustOccSrch( const SimulationData& data ) {
    /*
    First, let's convert the epoch bounds to doubles representing seconds from
    J2000.
@@ -701,8 +701,7 @@ This is the function which is used to perform the occultation search using
 the cspice gfoclt_c routine. We feed in the SimulationData which was
 retrieved prior to this call.
 */
-SpiceCell*
-cppspice::performOccultationSearch_cspice( const SimulationData& data ) {
+SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
    /*
    First, let's convert the epoch bounds to doubles representing seconds
    from J2000.

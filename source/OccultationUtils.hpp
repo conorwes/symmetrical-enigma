@@ -99,14 +99,14 @@ namespace cppspice {
    This is a function which is used to perform the occultation search using
    a custom written algorithm.
     */
-   bool performOccultationSearch_native( const SimulationData& data );
+   bool performCustOccSrch( const SimulationData& data );
 
    /*
    This is the function which is used to perform the occultation search using
    the cspice gfoclt_c routine. We feed in the SimulationData which was
    retrieved prior to this call.
    */
-   SpiceCell* performOccultationSearch_cspice( const SimulationData& data );
+   SpiceCell* performCSPICEOccSrch( const SimulationData& data );
 
    /*
    This is a function which can be used to iterate through the results from
