@@ -192,6 +192,74 @@ bool cppspice::isOccultedAtEpoch(
 }
 
 /*
+A bisection algorithm to find the transition.
+*/
+bool cppspice::bisectEpochs(
+   const SpiceInt     targetID,
+   const SpiceInt     occulterID,
+   const SpiceInt     observerID,
+   const SpiceDouble  lowerEpoch,
+   const SpiceBoolean lowerOcculted,
+   const SpiceDouble  upperEpoch,
+   const SpiceBoolean upperOcculted,
+   const SpiceChar*   occulterFrame,
+   const SpiceChar*   occulterName,
+   const SpiceChar*   targetFrame,
+   const SpiceChar*   targetName,
+   const SpiceDouble  tolerance,
+   const SpiceDouble  stepSize ) {
+   SpiceBoolean isOcculted{ false };
+
+   SpiceDouble  left  = lowerEpoch;
+   SpiceDouble  right = upperEpoch;
+   SpiceDouble  workingEpoch{ 0.0 };
+   SpiceInt     numIterations{ 0 };
+   SpiceBoolean leftOcculted  = lowerOcculted;
+   SpiceBoolean rightOcculted = upperOcculted;
+   SpiceBoolean workingOcculted{ false };
+   SpiceDouble  step = 0.1;
+   while ( left < right && ( abs( right - left ) > tolerance ) &&
+           numIterations < 1000 )
+   {
+      numIterations++;
+
+      // Start by just stepping from the left until we get a transition, then
+      // narrow by reducing the step size
+      workingEpoch = left + step;
+      isOccultedAtEpoch(
+         targetID,
+         occulterID,
+         observerID,
+         workingEpoch,
+         occulterFrame,
+         occulterName,
+         targetFrame,
+         targetName,
+         workingOcculted );
+
+      if ( workingOcculted != leftOcculted ) {
+         right         = workingEpoch;
+         rightOcculted = workingOcculted;
+         step /= 2;
+      }
+      else {
+         left         = workingEpoch;
+         leftOcculted = workingOcculted;
+      }
+      // trim away from left and right until we find a transition
+
+      if ( abs( right - left ) < tolerance ) {
+         std::cout << "Transition found: ";
+         SpiceChar utcOut[41];
+         et2utc_c( ( left + right ) / 2, "C", 0, 41, utcOut );
+         std::cout << utcOut << std::endl;
+      }
+   }
+
+   return true;
+}
+
+/*
 This is a function which is used to perform the occultation search using
 a custom written algorithm.
 */
@@ -222,13 +290,14 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
 
    SpiceBoolean isOcculted{ false };
 
-   // TODO - Implement root finding algorithm
-   // Here we need to find all of the instances where occultation state
-   // changes. To do so, we will break the span down into chunks corresponding
-   // to the step size, and then perform bisection to identify state changes.
-   // In each interval, we search by narrowing the interval (by adding the
-   // stepsize to the starting epoch until we either find the transition or we
-   // reach the maximum iterations)
+   /*
+   Here we need to find all of the instances where occultation state
+   changes. To do so, we will break the span down into chunks corresponding
+   to the step size, and then perform bisection to identify state changes.
+   In each interval, we search by narrowing the interval (by adding the
+   stepsize to the starting epoch until we either find the transition or we
+   reach the maximum iterations)
+   */
    int intervalCount =
       std::floor( ( upperEpochTime - lowerEpochTime ) / data.StepSize ) + 1;
    std::vector<double> epochTimes;
@@ -253,6 +322,36 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
          std::get<0>( data.TargetDetails ).c_str(),
          isOcculted );
       occultationVector.push_back( isOcculted );
+   }
+
+   std::vector<std::pair<
+      std::pair<SpiceDouble, SpiceBoolean>,
+      std::pair<SpiceDouble, SpiceBoolean>>>
+      refinedIntervals;
+   for ( size_t i = 1; i < epochTimes.size(); i++ ) {
+      if ( occultationVector[i - 1] != occultationVector[i] ) {
+         refinedIntervals.push_back( std::make_pair(
+            std::make_pair( epochTimes[i - 1], occultationVector[i - 1] ),
+            std::make_pair( epochTimes[i], occultationVector[i] ) ) );
+      }
+   }
+
+   for ( auto& p : refinedIntervals ) {
+      // perform bisection within the interval
+      bisectEpochs(
+         targetID,
+         occulterID,
+         observerID,
+         p.first.first,
+         p.first.second,
+         p.second.first,
+         p.second.second,
+         std::get<2>( data.OcculterDetails ).c_str(),
+         std::get<0>( data.OcculterDetails ).c_str(),
+         std::get<2>( data.TargetDetails ).c_str(),
+         std::get<0>( data.TargetDetails ).c_str(),
+         data.Tolerance,
+         data.StepSize );
    }
 
    return true;

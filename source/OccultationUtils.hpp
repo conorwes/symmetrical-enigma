@@ -78,6 +78,21 @@ namespace cppspice {
       const SpiceChar*  targetName,
       SpiceBoolean&     isOcculted );
 
+   bool bisectEpochs(
+      const SpiceInt     targetID,
+      const SpiceInt     occulterID,
+      const SpiceInt     observerID,
+      const SpiceDouble  lowerEpoch,
+      const SpiceBoolean lowerOcculted,
+      const SpiceDouble  upperEpoch,
+      const SpiceBoolean upperOcculted,
+      const SpiceChar*   occulterFrame,
+      const SpiceChar*   occulterName,
+      const SpiceChar*   targetFrame,
+      const SpiceChar*   targetName,
+      const SpiceDouble  tolerance,
+      const SpiceDouble  stepSize );
+
    /*
    This is a function which is used to perform the occultation search using
    a custom written algorithm.
