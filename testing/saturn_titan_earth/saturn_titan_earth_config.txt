@@ -7,7 +7,7 @@ PlanetaryEphemerides: ./testing/de421.bsp
 // Time Data
 LowerBoundEpoch: 2008 SEP 01 00:00:00 TDB
 UpperBoundEpoch: 2009 JAN 01 00:00:00 TDB
-StepSize: 900.0
+StepSize: 10.0
 
 // Simulation Data
 OccultationType: ANY
