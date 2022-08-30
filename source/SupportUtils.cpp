@@ -360,7 +360,7 @@ bool cppspice::isValidDate( const std::string& input ) {
    SpiceInt     observerID;
    SpiceBoolean found;
    SpiceDouble  lt;
-   // TODO - this assumes that sun and earth are in our spice file.
+   // TODO - this assumes that sun and earth have been furnished
    bodn2c_c( "SUN", &targetID, &found );
    bodn2c_c( "EARTH", &observerID, &found );
 
@@ -548,7 +548,8 @@ part of this function.
 */
 bool cppspice::queryParticipantDetails(
    const std::string&  participantType,
-   ParticipantDetails& participantInfo ) {
+   ParticipantDetails& participantInfo,
+   AlgorithmChoice&    choice ) {
    /*
    First prompt for the body name.
    */
@@ -568,31 +569,34 @@ bool cppspice::queryParticipantDetails(
    std::string participantName = input;
 
    /*
-   Next we need to retrieve the body shape.
+   Next we need to retrieve the body shape, if we're doing the CSPICE routine.
    */
-   std::cout << participantType << " Body Shape: " << std::endl;
-   for ( auto& s : validShapeTypes ) {
-      std::cout << "- " << s << std::endl;
+   std::string participantBodyShape{ "ELLIPSOID" };
+   if ( choice == AlgorithmChoice::SPICE ) {
+      std::cout << participantType << " Body Shape: " << std::endl;
+      for ( auto& s : validShapeTypes ) {
+         std::cout << "- " << s << std::endl;
+      }
+      std::getline( std::cin, input );
+
+      /*
+      Iterate through the known valid shape types to ensure that we're working
+      with a valid type.
+      */
+      auto shapeIterator = std::find_if(
+         validShapeTypes.begin(),
+         validShapeTypes.end(),
+         [&input]( const std::string& shape ) {
+            return shape == input;
+         } );
+
+      if ( shapeIterator == validShapeTypes.end() ) {
+         std::cout << "Error: the specified body shape '" << input
+                   << "' is not a valid option." << std::endl;
+         return false;
+      };
+      participantBodyShape = input;
    }
-   std::getline( std::cin, input );
-
-   /*
-   Iterate through the known valid shape types to ensure that we're working
-   with a valid type.
-   */
-   auto shapeIterator = std::find_if(
-      validShapeTypes.begin(),
-      validShapeTypes.end(),
-      [&input]( const std::string& shape ) {
-         return shape == input;
-      } );
-
-   if ( shapeIterator == validShapeTypes.end() ) {
-      std::cout << "Error: the specified body shape '" << input
-                << "' is not a valid option." << std::endl;
-      return false;
-   };
-   std::string participantBodyShape = input;
 
    /*
    Lastly, we need to retrieve the body frame.
@@ -667,7 +671,9 @@ This is a utility to query a user for all of the user-specified components
 of the analysis using the console. The data are then used to populate the
 SimulationData which then gets fed into our occultation analysis.
 */
-bool cppspice::queryConfigurationDetails( SimulationData& data ) {
+bool cppspice::queryConfigurationDetails(
+   SimulationData&  data,
+   AlgorithmChoice& choice ) {
 
    std::string input{ "" };
 
@@ -727,39 +733,48 @@ bool cppspice::queryConfigurationDetails( SimulationData& data ) {
    }
 
    /*
-   Next retrieve the occultation type and validate.
+   Next retrieve the occultation type and validate, but only for the CSPICE
+   routine.
    */
-   std::cout << "Occultation Type: " << std::endl;
-   for ( auto& type : validOccultationTypes ) {
-      std::cout << "- " << type << std::endl;
+   if ( choice == AlgorithmChoice::SPICE ) {
+      std::cout << "Occultation Type: " << std::endl;
+      for ( auto& type : validOccultationTypes ) {
+         std::cout << "- " << type << std::endl;
+      }
+      std::getline( std::cin, input );
+
+      /*
+      Iterate through valid types to ensure we have a type with which we can
+      work.
+      */
+      auto type_it = std::find_if(
+         validOccultationTypes.begin(),
+         validOccultationTypes.end(),
+         [&input]( const std::string& type ) {
+            return type == input;
+         } );
+
+      if ( type_it == validOccultationTypes.end() ) {
+         std::cout << "Error: the specified occultation type '" << input
+                   << "' is not a valid option." << std::endl;
+         return false;
+      };
+      data.OccultationType = input;
    }
-   std::getline( std::cin, input );
-
-   /*
-   Iterate through valid types to ensure we have a type with which we can
-   work.
-   */
-   auto type_it = std::find_if(
-      validOccultationTypes.begin(),
-      validOccultationTypes.end(),
-      [&input]( const std::string& type ) {
-         return type == input;
-      } );
-
-   if ( type_it == validOccultationTypes.end() ) {
-      std::cout << "Error: the specified occultation type '" << input
-                << "' is not a valid option." << std::endl;
-      return false;
-   };
-   data.OccultationType = input;
+   else {
+      data.OccultationType = "ANY";
+   }
 
    /*
    Retrieve the participant details for both the occulter and the target.
    */
-   if ( !queryParticipantDetails( "Occulting", data.OcculterDetails ) )
+   if ( !queryParticipantDetails(
+           "Occulting",
+           data.OcculterDetails,
+           choice ) )
       return false;
 
-   if ( !queryParticipantDetails( "Target", data.TargetDetails ) )
+   if ( !queryParticipantDetails( "Target", data.TargetDetails, choice ) )
       return false;
 
    /*
@@ -782,7 +797,7 @@ bool cppspice::queryConfigurationDetails( SimulationData& data ) {
    /*
    Finally, we need the tolerance value.
    */
-   std::cout << "Tolerance: " << std::endl;
+   std::cout << "Tolerance (s): " << std::endl;
    std::getline( std::cin, input );
    data.Tolerance = std::atof( input.c_str() );
    if ( data.Tolerance <= 0.0 ) {
@@ -935,8 +950,8 @@ bool cppspice::parseConfigurationFile(
    // clang-format on
 
    /*
-   This lambda combines the two previous lambdas to trim whitespace from both
-   sides of a string.
+   This lambda combines the two previous lambdas to trim whitespace from
+   both sides of a string.
    */
    auto trim = [trimLeft, trimRight]( std::string& s ) -> void {
       trimLeft( s );
@@ -1096,24 +1111,24 @@ bool cppspice::parseConfigurationFile(
       trim( content );
       if ( identifier == "PConstants" ) {
          /*
-         For each of the kernels, make sure we can disambiguate the relative
-         paths and then attempt to furnish the kernel.
+         For each of the kernels, make sure we can disambiguate the
+         relative paths and then attempt to furnish the kernel.
          */
          disambiguateRelativePath( content );
          furnsh_c( content.c_str() );
       }
       else if ( identifier == "Timespan" ) {
          /*
-         For each of the kernels, make sure we can disambiguate the relative
-         paths and then attempt to furnish the kernel.
+         For each of the kernels, make sure we can disambiguate the
+         relative paths and then attempt to furnish the kernel.
          */
          disambiguateRelativePath( content );
          furnsh_c( content.c_str() );
       }
       else if ( identifier == "PlanetaryEphemerides" ) {
          /*
-         For each of the kernels, make sure we can disambiguate the relative
-         paths and then attempt to furnish the kernel.
+         For each of the kernels, make sure we can disambiguate the
+         relative paths and then attempt to furnish the kernel.
          */
          disambiguateRelativePath( content );
          furnsh_c( content.c_str() );
@@ -1264,8 +1279,8 @@ bool cppspice::parseConfigurationFile(
    }
 
    /*
-   Theoretically, we should not have a fully configured SimulationData struct.
-   If not, we will handle errors later.
+   Theoretically, we should not have a fully configured SimulationData
+   struct. If not, we will handle errors later.
    */
    return true;
 }
@@ -1316,9 +1331,9 @@ translated to the correct path.
 */
 void cppspice::disambiguateRelativePath( std::string& path ) {
    /*
-   If the path starts with a period, we're using a relative path. We'll then
-   go ahead and concatenate the working directory and the relative path to get
-   a disambiguated path.
+   If the path starts with a period, we're using a relative path. We'll
+   then go ahead and concatenate the working directory and the relative
+   path to get a disambiguated path.
    */
    if ( path[0] == '.' ) {
       /*
@@ -1327,8 +1342,8 @@ void cppspice::disambiguateRelativePath( std::string& path ) {
       std::string currentPath = _getcwd( NULL, 0 );
 
       /*
-      Check the current path for the source folder, as this is where this has
-      had issues historically.
+      Check the current path for the source folder, as this is where this
+      has had issues historically.
       */
       auto sourceOffset = currentPath.rfind( "source" );
 

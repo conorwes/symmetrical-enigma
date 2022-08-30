@@ -78,8 +78,8 @@ int main() {
    console or a file.
    */
    std::cout << "How would you like to specify your parameters?" << std::endl;
-   std::cout << "- Console" << std::endl;
-   std::cout << "- File" << std::endl;
+   std::cout << "- Console (c)" << std::endl;
+   std::cout << "- File (f)" << std::endl;
    std::getline( std::cin, input );
 
    /*
@@ -91,14 +91,43 @@ int main() {
    Compare our input against the valid input types.
    */
    DefinitionMode definitionMode{ DefinitionMode::CONSOLE };
-   if ( input == "CONSOLE" ) {
+   if ( input == "CONSOLE" || input == "C" ) {
       definitionMode = DefinitionMode::CONSOLE;
    }
-   else if ( input == "FILE" ) {
+   else if ( input == "FILE" || input == "F" ) {
       definitionMode = DefinitionMode::FILE;
    }
    else {
       std::cout << "Error: the specified definition mode '" << input
+                << "' is invalid." << std::endl;
+      return 1;
+   }
+
+   /*
+   Next, let's choose whether we're using the CSPICE routine or the custom
+   algorithm.
+   */
+   std::cout << "Which algorithm would you like to use?" << std::endl;
+   std::cout << "- Custom (c)" << std::endl;
+   std::cout << "- SPICE (s)" << std::endl;
+   std::getline( std::cin, input );
+
+   /*
+   For the sake of comparison, let's convert to uppercase.
+   */
+   std::transform( input.begin(), input.end(), input.begin(), ::toupper );
+   AlgorithmChoice algorithmChoice{ AlgorithmChoice::CUSTOM };
+   if ( input == "CUSTOM" || input == "C" ) {
+      algorithmChoice = AlgorithmChoice::CUSTOM;
+   }
+   else if (
+      input == "SPICE" || input == "S" ||
+      input == "CSPICE" /*we'll be generous here*/ )
+   {
+      algorithmChoice = AlgorithmChoice::SPICE;
+   }
+   else {
+      std::cout << "Error: the specified algorithm choice '" << input
                 << "' is invalid." << std::endl;
       return 1;
    }
@@ -114,7 +143,7 @@ int main() {
       If we're working with console inputs, initialize the data here, and then
       drop into the queryConfigurationDetails function.
       */
-      if ( !queryConfigurationDetails( data ) ) {
+      if ( !queryConfigurationDetails( data, algorithmChoice ) ) {
          return 1;
       }
    }
@@ -154,14 +183,18 @@ int main() {
    /*
    Finally, the moment we've all been waiting for: let's perform our search.
    */
-   cppspice::performOccultationSearch_native( std::move( data ) );
-   // results = cppspice::performOccultationSearch_cspice( std::move( data )
-   // );
+   if ( algorithmChoice == AlgorithmChoice::CUSTOM ) {
+      cppspice::performOccultationSearch_native( std::move( data ) );
+   }
+   else {
+      results =
+         cppspice::performOccultationSearch_cspice( std::move( data ) );
 
-   /*
-   Now that we have our results, we can go ahead and report the data.
-   */
-   // cppspice::reportSearchSummary( std::move( results ) );
+      /*
+      Now that we have our results, we can go ahead and report the data.
+      */
+      cppspice::reportSearchSummary( std::move( results ) );
+   }
 
    return 0;
 }

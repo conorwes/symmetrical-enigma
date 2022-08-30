@@ -78,6 +78,9 @@ namespace cppspice {
       const SpiceChar*  targetName,
       SpiceBoolean&     isOcculted );
 
+   /*
+   A bisection algorithm to find the transition.
+   */
    bool bisectEpochs(
       const SpiceInt     targetID,
       const SpiceInt     occulterID,
@@ -90,8 +93,7 @@ namespace cppspice {
       const SpiceChar*   occulterName,
       const SpiceChar*   targetFrame,
       const SpiceChar*   targetName,
-      const SpiceDouble  tolerance,
-      const SpiceDouble  stepSize );
+      const SpiceDouble  tolerance );
 
    /*
    This is a function which is used to perform the occultation search using

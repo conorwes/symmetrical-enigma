@@ -206,10 +206,7 @@ bool cppspice::bisectEpochs(
    const SpiceChar*   occulterName,
    const SpiceChar*   targetFrame,
    const SpiceChar*   targetName,
-   const SpiceDouble  tolerance,
-   const SpiceDouble  stepSize ) {
-   SpiceBoolean isOcculted{ false };
-
+   const SpiceDouble  tolerance ) {
    SpiceDouble  left  = lowerEpoch;
    SpiceDouble  right = upperEpoch;
    SpiceDouble  workingEpoch{ 0.0 };
@@ -218,13 +215,22 @@ bool cppspice::bisectEpochs(
    SpiceBoolean rightOcculted = upperOcculted;
    SpiceBoolean workingOcculted{ false };
    SpiceDouble  step = 0.1;
+
+   /*
+   Perform a bisection algorithm. Our algorithm is pretty simple: while the
+   difference between the two bounds are greater than the tolerance and the
+   number of iterations is below our maximum, we step from the lower bound
+   until we find the transition. At that point, we set the upper bound as that
+   transition epoch, reduce our stepsize, and resume narrowing the bounds.
+   */
    while ( left < right && ( abs( right - left ) > tolerance ) &&
            numIterations < 1000 )
    {
       numIterations++;
 
-      // Start by just stepping from the left until we get a transition, then
-      // narrow by reducing the step size
+      /*
+      Take one step, and then evaluate the occultation.
+      */
       workingEpoch = left + step;
       isOccultedAtEpoch(
          targetID,
@@ -237,18 +243,29 @@ bool cppspice::bisectEpochs(
          targetName,
          workingOcculted );
 
+      /*
+      If we have a state change, we've stepped beyond the transition, so set
+      the right bound as the working epoch, and then halve the step size.
+      */
       if ( workingOcculted != leftOcculted ) {
          right         = workingEpoch;
          rightOcculted = workingOcculted;
          step /= 2;
       }
       else {
+         /*
+         Otherwise, keep on chugging.
+         */
          left         = workingEpoch;
          leftOcculted = workingOcculted;
       }
-      // trim away from left and right until we find a transition
 
+      /*
+      If we've gotten below the tolerance, we've found our transition. Report
+      the midway point between the two bounds
+      */
       if ( abs( right - left ) < tolerance ) {
+
          std::cout << "Transition found: ";
          SpiceChar utcOut[41];
          et2utc_c( ( left + right ) / 2, "C", 0, 41, utcOut );
@@ -258,6 +275,79 @@ bool cppspice::bisectEpochs(
 
    return true;
 }
+// clang-format off
+/*
+
+- Brief I/O
+
+   Variable     I/O  DESCRIPTION
+   --------     ---  --------------------------------------------------
+   SpiceInt      I   The NAIF ID of the target.
+   SpiceInt      I   The NAIF ID of the occulter.
+   SpiceInt      I   The NAIF ID of the observer.
+   SpiceDouble   I   The left epoch of the window being evaluated.
+   SpiceBoolean  I   The occultation state at the left epoch of the window.
+   SpiceDouble   I   The right epoch of the window being evaluated.
+   SpiceBoolean  I   The occultation state at the right epoch of the window.
+   SpiceChar*    I   The name of the occulter's frame.
+   SpiceChar*    I   The name of the occulter.
+   SpiceChar*    I   The name of the target's frame.
+   SpiceChar*    I   The name of the target.
+   SpiceDouble   I   The tolerance, in seconds, used in the bisection algorithm.
+
+- Detailed_Input
+
+   targetID      an int representing the NAIF ID of the target object.
+   occulterID    an int representing the NAIF ID of the occulter object.
+   observerID    an int representing the NAIF ID of the observer object.
+   lowerEpoch    a double representing the left epoch of the evaluation window.
+   lowerOcculted a bool representing the occultation status of the left epoch of the
+                 evaluation window.
+   upperEpoch    a double representing the right epoch of the evaluation window.
+   upperOcculted a bool representing the occultation status of the right epoch of the
+                 evaluation window.
+   occulterFrame the name of the occulter's frame.
+   occulterName  the name of the occulter.
+   targetFrame   the name of the target's frame.
+   targetName    the name of the target.
+   tolerance     the tolerance in seconds used in the bisection algorithm.
+
+- Detailed_Output
+
+   The function returns true if no errors are encountered.
+
+- Error Handling
+
+   CSPICE components are handled using the native error handling. Otherwise, errors
+   are reported and false is returned.
+
+- Particulars
+
+   None.
+
+- Literature_References
+
+   None.
+
+- Author
+
+   C.P. Westphal     (self)
+
+- Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+- Restrictions
+
+   None.
+
+- Version
+
+   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+
+*/
+// clang-format on
 
 /*
 This is a function which is used to perform the occultation search using
@@ -298,6 +388,11 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
    stepsize to the starting epoch until we either find the transition or we
    reach the maximum iterations)
    */
+
+   /*
+   First, determine the number of intervals to evaluate. We always want to hit
+   the first and last.
+   */
    int intervalCount =
       std::floor( ( upperEpochTime - lowerEpochTime ) / data.StepSize ) + 1;
    std::vector<double> epochTimes;
@@ -307,9 +402,15 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
    }
    epochTimes.push_back( upperEpochTime );
 
+   /*
+   Also reserve the same number of members in the occultation vector.
+   */
    std::vector<bool> occultationVector;
    occultationVector.reserve( epochTimes.size() );
 
+   /*
+   Now, for each of the epochs, we evaluate the occultation status.
+   */
    for ( auto& et : epochTimes ) {
       isOccultedAtEpoch(
          targetID,
@@ -324,6 +425,10 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
       occultationVector.push_back( isOcculted );
    }
 
+   /*
+   Next, iterate through all of the occultation vector members to find
+   instances of changes. These will then be fed into our bisection algorithm.
+   */
    std::vector<std::pair<
       std::pair<SpiceDouble, SpiceBoolean>,
       std::pair<SpiceDouble, SpiceBoolean>>>
@@ -336,6 +441,10 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
       }
    }
 
+   /*
+   Now, for each interval, perform the bisection algorithm. All events will be
+   reported as part of this routine.
+   */
    for ( auto& p : refinedIntervals ) {
       // perform bisection within the interval
       bisectEpochs(
@@ -350,12 +459,73 @@ bool cppspice::performOccultationSearch_native( const SimulationData& data ) {
          std::get<0>( data.OcculterDetails ).c_str(),
          std::get<2>( data.TargetDetails ).c_str(),
          std::get<0>( data.TargetDetails ).c_str(),
-         data.Tolerance,
-         data.StepSize );
+         data.Tolerance );
    }
 
    return true;
 }
+// clang-format off
+/*
+
+- Brief I/O
+
+   Variable  I/O  DESCRIPTION
+   --------  ---  --------------------------------------------------
+   data       I   The simulation data which is fed into gfoclt_c.
+
+- Detailed_Input
+
+   data     a struct which contains the simulation data used in the
+            occultation analysis. The struct members include:
+
+               LowerBoundEpoch:  The epoch in TDB which begins the range.
+               UpperBoundEpoch   The epoch in TDB which ends the range.
+               StepSize          The step size in seconds.
+               OccultationType   The type of the occultation. The supported
+                                 values are outlined in gfoclt_c.c
+               OcculterDetails   A tuple containing the occulting object's
+                                 name, shape, and reference frame.
+               TargetDetails     A tuple containing the occulting object's
+                                 name, shape, and reference frame.
+               ObserverName      The name of the observing object.
+               Tolerance         The tolerance in seconds.
+
+- Detailed_Output
+
+   The function returns true if no errors are encountered.
+
+- Error Handling
+
+   CSPICE components are handled using the native error handling. Otherwise, errors
+   are reported and false is returned.
+
+- Particulars
+
+   None.
+
+- Literature_References
+
+   None.
+
+- Author
+
+   C.P. Westphal     (self)
+
+- Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+- Restrictions
+
+   None.
+
+- Version
+
+   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+
+*/
+// clang-format on
 
 /*
 This is the function which is used to perform the occultation search using

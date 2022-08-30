@@ -135,6 +135,15 @@ namespace cppspice {
    };
 
    /*
+   This gets minimal use, but it still feels nicer to operate on enums instead
+   of strings.
+    */
+   enum class AlgorithmChoice : int {
+      CUSTOM,
+      SPICE
+   };
+
+   /*
    Occultation type is useful in several places, so it is useful to have a
    defined list of valid options here.
    */

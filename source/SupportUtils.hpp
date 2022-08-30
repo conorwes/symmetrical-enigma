@@ -99,14 +99,16 @@ namespace cppspice {
    */
    bool queryParticipantDetails(
       const std::string&  participantType,
-      ParticipantDetails& participantInfo );
+      ParticipantDetails& participantInfo,
+      AlgorithmChoice&    choice );
 
    /*
    This is a utility to query a user for all of the user-specified components
    of the analysis using the console. The data are then used to populate the
    SimulationData which then gets fed into our occultation analysis.
    */
-   bool queryConfigurationDetails( SimulationData& data );
+   bool
+   queryConfigurationDetails( SimulationData& data, AlgorithmChoice& choice );
 
    /*
    This utility queries the user for a configuration file, which is then
