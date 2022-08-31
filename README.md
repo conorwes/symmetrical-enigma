@@ -24,7 +24,11 @@ symmetrical-enigma was the name that GitHub suggested for the repository, and I 
 
 ## Installation
 
-Part of this effort was also an exploration of working with C++ in Visual Studio Code, and I wanted to try the Microsoft Visual Studio Build Tools. So, this code is configured for that use case.
+Part of this effort was also an exploration of working with C++ in Visual Studio Code, and I wanted to try the Microsoft Visual Studio Build Tools. So, this code is configured for that use case. My personal workflow when editing this project is as follows:
+1. Open the Developer Command Prompt for VS
+2. cd to the project directory
+3. "code ."
+4. From Visual Studio Code, I then run the program
 
 ## Roadmap
 
