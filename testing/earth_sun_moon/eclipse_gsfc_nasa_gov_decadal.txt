@@ -1,0 +1,28 @@
+2030 Jun 15 	18:34:34 	Partial
+2030 Dec 09 	22:28:51 	Penumbral
+2031 May 07 	03:52:02 	Penumbral
+2031 Jun 05 	11:45:17 	Penumbral
+2031 Oct 30 	07:46:45 	Penumbral
+2032 Apr 25 	15:14:51 	Total
+2032 Oct 18 	19:03:40 	Total
+2033 Apr 14 	19:13:51 	Total
+2033 Oct 08 	10:56:23 	Total
+2034 Apr 03 	19:06:59 	Penumbral
+2034 Sep 28 	02:47:37 	Partial
+2035 Feb 22 	09:06:12 	Penumbral
+2035 Aug 19 	01:12:15 	Partial
+2036 Feb 11 	22:13:06 	Total
+2036 Aug 07 	02:52:32 	Total
+2037 Jan 31 	14:01:38 	Total
+2037 Jul 27 	04:09:53 	Partial
+2038 Jan 21 	03:49:52 	Penumbral
+2038 Jun 17 	02:45:02 	Penumbral
+2038 Jul 16 	11:35:56 	Penumbral
+2038 Dec 11 	17:44:60 	Penumbral
+2039 Jun 06 	18:54:25 	Partial
+2039 Nov 30 	16:56:28 	Partial
+2040 May 26 	11:46:22 	Total
+2040 Nov 18 	19:04:41 	Total
+
+https://eclipse.gsfc.nasa.gov/LEdecade/LEdecade2021.html
+https://eclipse.gsfc.nasa.gov/LEdecade/LEdecade2031.html
