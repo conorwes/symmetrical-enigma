@@ -72,6 +72,70 @@ bool cppspice::isOccultedAtEpoch(
    const SpiceChar*  targetFrame,
    const SpiceChar*  targetName,
    SpiceBoolean&     isOcculted ) {
+   /*
+
+   - Brief I/O
+
+      Variable     I/O  DESCRIPTION
+      --------     ---  --------------------------------------------------
+      SpiceInt      I   The NAIF ID of the target.
+      SpiceInt      I   The NAIF ID of the occulter.
+      SpiceInt      I   The NAIF ID of the observer.
+      SpiceDouble   I   The epoch being evaluated.
+      SpiceChar*    I   The name of the occulter's frame.
+      SpiceChar*    I   The name of the occulter.
+      SpiceChar*    I   The name of the target's frame.
+      SpiceChar*    I   The name of the target.
+      SpiceBoolean  I   Whether an occultation is happening.
+
+   - Detailed_Input
+
+      targetID      an int representing the NAIF ID of the target object.
+      occulterID    an int representing the NAIF ID of the occulter object.
+      observerID    an int representing the NAIF ID of the observer object.
+      epoch         a double representing the epoch being evaluated.
+      occulterFrame the name of the occulter's frame.
+      occulterName  the name of the occulter.
+      targetFrame   the name of the target's frame.
+      targetName    the name of the target.
+      isOcculted    a boolean representing whether an occultation is
+   happening.
+
+   - Detailed_Output
+
+      The function returns true if no errors are encountered.
+
+   - Error Handling
+
+      CSPICE components are handled using the native error handling.
+   Otherwise, errors are reported and false is returned.
+
+   - Particulars
+
+      None.
+
+   - Literature_References
+
+      None.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
 
    /*
    First, we need to get the J2000 observer position.
@@ -82,8 +146,8 @@ bool cppspice::isOccultedAtEpoch(
       observerID,
       epoch,
       "j2000",
-      "LT",
-      399,
+      "NONE",
+      EARTHID,
       earthToObserverJ2000,
       &lt );
 
@@ -95,8 +159,8 @@ bool cppspice::isOccultedAtEpoch(
       occulterID,
       epoch,
       "j2000",
-      "LT",
-      399,
+      "NONE",
+      EARTHID,
       earthToOcculterJ2000,
       &lt );
 
@@ -104,29 +168,36 @@ bool cppspice::isOccultedAtEpoch(
    We can now calculate the J2000 occulter-to-observer vector.
    */
    SpiceDouble occulterToObserverJ2000[3];
-   occulterToObserverJ2000[0] =
-      ( earthToOcculterJ2000[0] * -1.0 ) + earthToObserverJ2000[0];
-   occulterToObserverJ2000[1] =
-      ( earthToOcculterJ2000[1] * -1.0 ) + earthToObserverJ2000[1];
-   occulterToObserverJ2000[2] =
-      ( earthToOcculterJ2000[2] * -1.0 ) + earthToObserverJ2000[2];
+   vlcom_c(
+      -1.0,
+      earthToOcculterJ2000,
+      1.0,
+      earthToObserverJ2000,
+      occulterToObserverJ2000 );
 
    /*
    Next, let's get the J2000 target position.
    */
    SpiceDouble earthToTargetJ2000[6];
-   spkez_c( targetID, epoch, "j2000", "LT", 399, earthToTargetJ2000, &lt );
+   spkez_c(
+      targetID,
+      epoch,
+      "j2000",
+      "NONE",
+      EARTHID,
+      earthToTargetJ2000,
+      &lt );
 
    /*
-   We can now calculate the J2000 occulter-to-observer vector.
+   We can now calculate the J2000 occulter-to-target vector.
    */
    SpiceDouble occulterToTargetJ2000[3];
-   occulterToTargetJ2000[0] =
-      ( earthToOcculterJ2000[0] * -1.0 ) + earthToTargetJ2000[0];
-   occulterToTargetJ2000[1] =
-      ( earthToOcculterJ2000[1] * -1.0 ) + earthToTargetJ2000[1];
-   occulterToTargetJ2000[2] =
-      ( earthToOcculterJ2000[2] * -1.0 ) + earthToTargetJ2000[2];
+   vlcom_c(
+      -1.0,
+      earthToOcculterJ2000,
+      1.0,
+      earthToTargetJ2000,
+      occulterToTargetJ2000 );
 
    /*
    Going forward, we'll want to evaluate everything in the occulter-fixed
@@ -152,18 +223,18 @@ bool cppspice::isOccultedAtEpoch(
    radii from the kernel we've already furnished.
    */
    SpiceInt    n;
-   SpiceDouble radii[3];
-   bodvrd_c( occulterName, "RADII", 3, &n, radii );
+   SpiceDouble occulterRadii[3];
+   bodvrd_c( occulterName, "RADII", 3, &n, occulterRadii );
 
    /*
    The equatorial radius will be used elsewhere, so save that off.
    */
-   SpiceDouble occulterRadiusEq = radii[0];
+   SpiceDouble occulterRadiusEq = occulterRadii[0];
 
    /*
    Now we can scale the relevant vectors.
    */
-   SpiceDouble scaleFactor = radii[0] / radii[2];
+   SpiceDouble scaleFactor = occulterRadii[0] / occulterRadii[2];
    occulterToTargetFixed[2] *= scaleFactor;
    occulterToObserverFixed[2] *= scaleFactor;
 
@@ -171,10 +242,9 @@ bool cppspice::isOccultedAtEpoch(
    In addition to scaling the relevant vectors, we also need to scale the
    target.
    */
-   bodvrd_c( targetName, "RADII", 3, &n, radii );
-   radii[0] *= scaleFactor;
-   radii[1] *= scaleFactor;
-   radii[2] *= scaleFactor;
+   SpiceDouble targetRadii[3];
+   bodvrd_c( targetName, "RADII", 3, &n, targetRadii );
+   vscl_c( scaleFactor, targetRadii, targetRadii );
 
    /*
    Later in our algorithm, we'll need to have the observer-to-occulter and
@@ -182,24 +252,20 @@ bool cppspice::isOccultedAtEpoch(
    need to reverse the direction.
    */
    SpiceDouble observerToOcculterFixed[3];
-   observerToOcculterFixed[0] = occulterToObserverFixed[0] * -1.0;
-   observerToOcculterFixed[1] = occulterToObserverFixed[1] * -1.0;
-   observerToOcculterFixed[2] = occulterToObserverFixed[2] * -1.0;
+   vscl_c( -1.0, occulterToObserverFixed, observerToOcculterFixed );
 
    SpiceDouble observerToTargetFixed[3];
-   observerToTargetFixed[0] =
-      occulterToTargetFixed[0] + observerToOcculterFixed[0];
-   observerToTargetFixed[1] =
-      occulterToTargetFixed[1] + observerToOcculterFixed[1];
-   observerToTargetFixed[2] =
-      occulterToTargetFixed[2] + observerToOcculterFixed[2];
+   vadd_c(
+      occulterToTargetFixed,
+      observerToOcculterFixed,
+      observerToTargetFixed );
 
    /*
    Perform a quick check to ensure that the observer is not within the
    target's radius.
    */
-   SpiceDouble distance = calculateMagnitude( observerToTargetFixed );
-   if ( distance < radii[0] ) {
+   SpiceDouble distance = vnorm_c( observerToTargetFixed );
+   if ( distance < targetRadii[0] ) {
       std::cout << "Error: observer is within the target's radius."
                 << std::endl;
       return false;
@@ -210,7 +276,7 @@ bool cppspice::isOccultedAtEpoch(
    the observer-to-target, the occulter is on the far side of the target, and
    thus can't be occulted.
    */
-   if ( calculateMagnitude( observerToOcculterFixed ) > distance ) {
+   if ( vnorm_c( observerToOcculterFixed ) > distance ) {
       isOcculted = false;
       return true;
    }
@@ -219,12 +285,12 @@ bool cppspice::isOccultedAtEpoch(
    Get the half angle between the observer-to-target vector and the target's
    radius.
    */
-   SpiceDouble halfAngle = asin( radii[0] / distance );
+   SpiceDouble halfAngle = asin( targetRadii[0] / distance );
 
    /*
    Now we can calculate the occulter half angle/body width.
    */
-   SpiceDouble occulterRadius = calculateMagnitude( occulterToObserverFixed );
+   SpiceDouble occulterRadius = vnorm_c( occulterToObserverFixed );
    SpiceDouble bodyHalfAngle{ 0.0 };
 
    /*
@@ -245,13 +311,8 @@ bool cppspice::isOccultedAtEpoch(
    /*
    Almost there...now, get the target-occulter-observer angle.
    */
-   SpiceDouble v1Length = calculateMagnitude( observerToTargetFixed );
-   SpiceDouble v2Length = calculateMagnitude( observerToOcculterFixed );
-   SpiceDouble targetOcculterObserverAngle = acos(
-      ( observerToTargetFixed[0] * observerToOcculterFixed[0] +
-        observerToTargetFixed[1] * observerToOcculterFixed[1] +
-        observerToTargetFixed[2] * observerToOcculterFixed[2] ) /
-      ( v1Length * v2Length ) );
+   SpiceDouble targetOcculterObserverAngle =
+      vsep_c( observerToTargetFixed, observerToOcculterFixed );
 
    /*
    Finally! If the target-occulter-observer angle is smaller than the sum of
@@ -261,71 +322,6 @@ bool cppspice::isOccultedAtEpoch(
 
    return true;
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable     I/O  DESCRIPTION
-   --------     ---  --------------------------------------------------
-   SpiceInt      I   The NAIF ID of the target.
-   SpiceInt      I   The NAIF ID of the occulter.
-   SpiceInt      I   The NAIF ID of the observer.
-   SpiceDouble   I   The epoch being evaluated.
-   SpiceChar*    I   The name of the occulter's frame.
-   SpiceChar*    I   The name of the occulter.
-   SpiceChar*    I   The name of the target's frame.
-   SpiceChar*    I   The name of the target.
-   SpiceBoolean  I   Whether an occultation is happening.
-
-- Detailed_Input
-
-   targetID      an int representing the NAIF ID of the target object.
-   occulterID    an int representing the NAIF ID of the occulter object.
-   observerID    an int representing the NAIF ID of the observer object.
-   epoch         a double representing the epoch being evaluated.
-   occulterFrame the name of the occulter's frame.
-   occulterName  the name of the occulter.
-   targetFrame   the name of the target's frame.
-   targetName    the name of the target.
-   isOcculted    a boolean representing whether an occultation is happening.
-
-- Detailed_Output
-
-   The function returns true if no errors are encountered.
-
-- Error Handling
-
-   CSPICE components are handled using the native error handling. Otherwise, errors
-   are reported and false is returned.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 A bisection algorithm to find the transition.
@@ -344,16 +340,86 @@ bool cppspice::bisectEpochs(
    const SpiceChar*   targetName,
    const SpiceDouble  tolerance ) {
    /*
+   - Brief I/O
+
+   Variable     I/O  DESCRIPTION
+   --------     ---  --------------------------------------------------
+   SpiceInt      I   The NAIF ID of the target.
+   SpiceInt      I   The NAIF ID of the occulter.
+   SpiceInt      I   The NAIF ID of the observer.
+   SpiceDouble   I   The left epoch of the window being evaluated.
+   SpiceBoolean  I   The occultation state at the left epoch of the window.
+   SpiceDouble   I   The right epoch of the window being evaluated.
+   SpiceBoolean  I   The occultation state at the right epoch of the window.
+   SpiceChar*    I   The name of the occulter's frame.
+   SpiceChar*    I   The name of the occulter.
+   SpiceChar*    I   The name of the target's frame.
+   SpiceChar*    I   The name of the target.
+   SpiceDouble   I   The tolerance, in seconds, used in the bisection
+   algorithm.
+
+   - Detailed_Input
+
+   targetID      an int representing the NAIF ID of the target object.
+   occulterID    an int representing the NAIF ID of the occulter object.
+   observerID    an int representing the NAIF ID of the observer object.
+   lowerEpoch    a double representing the left epoch of the evaluation
+   window. lowerOcculted a bool representing the occultation status of the
+   left epoch of the evaluation window. upperEpoch    a double representing
+   the right epoch of the evaluation window. upperOcculted a bool representing
+   the occultation status of the right epoch of the evaluation window.
+   occulterFrame the name of the occulter's frame. occulterName  the name of
+   the occulter. targetFrame the name of the target's frame. targetName    the
+   name of the target. tolerance the tolerance in seconds used in the
+   bisection algorithm.
+
+   - Detailed_Output
+
+   The function returns true if no errors are encountered.
+
+   - Error Handling
+
+   CSPICE components are handled using the native error handling. Otherwise,
+   errors are reported and false is returned.
+
+   - Particulars
+
+   None.
+
+   - Literature_References
+
+   None.
+
+   - Author
+
+   C.P. Westphal     (self)
+
+   - Credits
+
+   This file references the CSPICE API, which was developed by the NAIF at
+   JPL.
+
+   - Restrictions
+
+   None.
+
+   - Version
+      Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
+   /*
    Since we're going to do a lot of iteration, define our workers here.
    */
-   SpiceDouble  left  = lowerEpoch;
-   SpiceDouble  right = upperEpoch;
+   SpiceDouble  left{ lowerEpoch };
+   SpiceDouble  right{ upperEpoch };
    SpiceDouble  workingEpoch{ 0.0 };
    SpiceInt     numIterations{ 0 };
-   SpiceBoolean leftOcculted  = lowerOcculted;
-   SpiceBoolean rightOcculted = upperOcculted;
+   SpiceBoolean leftOcculted{ lowerOcculted };
+   SpiceBoolean rightOcculted{ upperOcculted };
    SpiceBoolean workingOcculted{ false };
-   SpiceDouble  step = 0.1;
+   SpiceDouble  step{ STEPSIZE };
+   SpiceBoolean midpointOcculted{ false };
 
    /*
    Perform a bisection algorithm. Our algorithm is pretty simple: while the
@@ -363,12 +429,34 @@ bool cppspice::bisectEpochs(
    transition epoch, reduce our stepsize, and resume narrowing the bounds.
    */
    while ( left < right && ( abs( right - left ) > tolerance ) &&
-           numIterations < 1000 )
+           numIterations < ITERLIMIT )
    {
       /*
       Increase the iteration count.
       */
       numIterations++;
+
+      /*
+      First check the midpoint to narrow down the search a bit.
+      */
+      SpiceDouble midpoint = ( left + right ) / 2;
+      isOccultedAtEpoch(
+         targetID,
+         occulterID,
+         observerID,
+         midpoint,
+         occulterFrame,
+         occulterName,
+         targetFrame,
+         targetName,
+         midpointOcculted );
+
+      if ( midpointOcculted == leftOcculted ) {
+         left = midpoint;
+      }
+      else if ( midpointOcculted == rightOcculted ) {
+         right = midpoint;
+      }
 
       /*
       Take one step, and then evaluate the occultation.
@@ -411,17 +499,33 @@ bool cppspice::bisectEpochs(
          std::cout
             << ( !leftOcculted && rightOcculted ? "Occultation started: "
                                                 : "Occultation ended: " );
-         SpiceChar utcOut[41];
-         et2utc_c( ( left + right ) / 2, "C", 0, 41, utcOut );
-         std::cout << utcOut << std::endl;
+         SpiceChar timeOut[TIMELEN];
+         timout_c(
+            ( left + right ) / 2,
+            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+            TIMELEN,
+            timeOut );
+         std::cout << timeOut << std::endl;
       }
-      else if ( numIterations >= 1000 ) {
+      else if ( numIterations >= ITERLIMIT ) {
          /*
          If we exceed the iteration count, something has gone wrong, so error
          out.
          */
+         SpiceChar lowerText[TIMELEN];
+         SpiceChar upperText[TIMELEN];
+         timout_c(
+            left,
+            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+            TIMELEN,
+            lowerText );
+         timout_c(
+            right,
+            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+            TIMELEN,
+            upperText );
          std::cout << "Error: unable to find the transition between '"
-                   << lowerEpoch << "' and '" << upperEpoch << "'."
+                   << lowerText << "' and '" << upperText << "'."
                    << std::endl;
          return false;
       }
@@ -429,85 +533,73 @@ bool cppspice::bisectEpochs(
 
    return true;
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable     I/O  DESCRIPTION
-   --------     ---  --------------------------------------------------
-   SpiceInt      I   The NAIF ID of the target.
-   SpiceInt      I   The NAIF ID of the occulter.
-   SpiceInt      I   The NAIF ID of the observer.
-   SpiceDouble   I   The left epoch of the window being evaluated.
-   SpiceBoolean  I   The occultation state at the left epoch of the window.
-   SpiceDouble   I   The right epoch of the window being evaluated.
-   SpiceBoolean  I   The occultation state at the right epoch of the window.
-   SpiceChar*    I   The name of the occulter's frame.
-   SpiceChar*    I   The name of the occulter.
-   SpiceChar*    I   The name of the target's frame.
-   SpiceChar*    I   The name of the target.
-   SpiceDouble   I   The tolerance, in seconds, used in the bisection algorithm.
-
-- Detailed_Input
-
-   targetID      an int representing the NAIF ID of the target object.
-   occulterID    an int representing the NAIF ID of the occulter object.
-   observerID    an int representing the NAIF ID of the observer object.
-   lowerEpoch    a double representing the left epoch of the evaluation window.
-   lowerOcculted a bool representing the occultation status of the left epoch of the
-                 evaluation window.
-   upperEpoch    a double representing the right epoch of the evaluation window.
-   upperOcculted a bool representing the occultation status of the right epoch of the
-                 evaluation window.
-   occulterFrame the name of the occulter's frame.
-   occulterName  the name of the occulter.
-   targetFrame   the name of the target's frame.
-   targetName    the name of the target.
-   tolerance     the tolerance in seconds used in the bisection algorithm.
-
-- Detailed_Output
-
-   The function returns true if no errors are encountered.
-
-- Error Handling
-
-   CSPICE components are handled using the native error handling. Otherwise, errors
-   are reported and false is returned.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is a function which is used to perform the occultation search using
 a custom written algorithm.
 */
 bool cppspice::performCustOccSrch( const SimulationData& data ) {
+   /*
+
+   - Brief I/O
+
+      Variable  I/O  DESCRIPTION
+      --------  ---  --------------------------------------------------
+      data       I   The simulation data which is fed into gfoclt_c.
+
+   - Detailed_Input
+
+      data     a struct which contains the simulation data used in the
+               occultation analysis. The struct members include:
+
+                  LowerBoundEpoch:  The epoch in TDB which begins the range.
+                  UpperBoundEpoch   The epoch in TDB which ends the range.
+                  StepSize          The step size in seconds.
+                  OccultationType   The type of the occultation. The supported
+                                    values are outlined in gfoclt_c.c
+                  OcculterDetails   A tuple containing the occulting object's
+                                    name, shape, and reference frame.
+                  TargetDetails     A tuple containing the occulting object's
+                                    name, shape, and reference frame.
+                  ObserverName      The name of the observing object.
+                  Tolerance         The tolerance in seconds.
+
+   - Detailed_Output
+
+      The function returns true if no errors are encountered.
+
+   - Error Handling
+
+      CSPICE components are handled using the native error handling.
+   Otherwise, errors are reported and false is returned.
+
+   - Particulars
+
+      None.
+
+   - Literature_References
+
+      None.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      -Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    /*
    First, let's convert the epoch bounds to doubles representing seconds from
    J2000.
@@ -633,68 +725,6 @@ bool cppspice::performCustOccSrch( const SimulationData& data ) {
 
    return true;
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable  I/O  DESCRIPTION
-   --------  ---  --------------------------------------------------
-   data       I   The simulation data which is fed into gfoclt_c.
-
-- Detailed_Input
-
-   data     a struct which contains the simulation data used in the
-            occultation analysis. The struct members include:
-
-               LowerBoundEpoch:  The epoch in TDB which begins the range.
-               UpperBoundEpoch   The epoch in TDB which ends the range.
-               StepSize          The step size in seconds.
-               OccultationType   The type of the occultation. The supported
-                                 values are outlined in gfoclt_c.c
-               OcculterDetails   A tuple containing the occulting object's
-                                 name, shape, and reference frame.
-               TargetDetails     A tuple containing the occulting object's
-                                 name, shape, and reference frame.
-               ObserverName      The name of the observing object.
-               Tolerance         The tolerance in seconds.
-
-- Detailed_Output
-
-   The function returns true if no errors are encountered.
-
-- Error Handling
-
-   CSPICE components are handled using the native error handling. Otherwise, errors
-   are reported and false is returned.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is the function which is used to perform the occultation search using
@@ -702,6 +732,70 @@ the cspice gfoclt_c routine. We feed in the SimulationData which was
 retrieved prior to this call.
 */
 SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
+   /*
+   - Brief I/O
+
+      Variable  I/O  DESCRIPTION
+      --------  ---  --------------------------------------------------
+      data       I   The simulation data which is fed into gfoclt_c.
+
+   - Detailed_Input
+
+      data     a struct which contains the simulation data used in the
+               occultation analysis. The struct members include:
+
+                  LowerBoundEpoch:  The epoch in TDB which begins the range.
+                  UpperBoundEpoch   The epoch in TDB which ends the range.
+                  StepSize          The step size in seconds.
+                  OccultationType   The type of the occultation. The supported
+                                    values are outlined in gfoclt_c.c
+                  OcculterDetails   A tuple containing the occulting object's
+                                    name, shape, and reference frame.
+                  TargetDetails     A tuple containing the occulting object's
+                                    name, shape, and reference frame.
+                  ObserverName      The name of the observing object.
+                  Tolerance         The tolerance in seconds.
+
+   - Detailed_Output
+
+      The function returns a SPICE window representing the set of time
+   intervals, within the confinement period, when the specified occultation
+   occurs.
+
+      The endpoints of the time intervals comprising 'result' are interpreted
+   as seconds past J2000 TDB.
+
+   - Error Handling
+
+      This function's error handling is performed by the CSPICE API.
+
+   - Particulars
+
+      For more information, please see the CSPICE documentation for gfoclt_c.
+
+   - Literature_References
+
+      CSPICE's documentation.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      -Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    /*
    First, let's convert the epoch bounds to doubles representing seconds
    from J2000.
@@ -714,16 +808,9 @@ SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
    /*
    Next, let's configure the cnfine using our bounds.
    */
-   SPICEDOUBLE_CELL( cnfine, 200 );
-   SPICEDOUBLE_CELL( result, 200 );
+   SPICEDOUBLE_CELL( cnfine, CELLSIZE );
+   SPICEDOUBLE_CELL( result, CELLSIZE );
    wninsd_c( lowerEpochTime, upperEpochTime, &cnfine );
-
-   /*
-   For this program, we're going to use constant step size. This is a tradeoff
-   between development complexity and functionality, and the performance
-   associated with a constant stepsize seems acceptable.
-   */
-   gfsstp_c( data.StepSize );
 
    /*
    Finally, feed our SimulationData into gfoclt_c.
@@ -736,7 +823,7 @@ SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
       std::get<0>( data.TargetDetails ).c_str(),
       std::get<1>( data.TargetDetails ).c_str(),
       std::get<2>( data.TargetDetails ).c_str(),
-      "LT",
+      "NONE",
       data.ObserverName.c_str(),
       data.StepSize,
       &cnfine,
@@ -744,71 +831,6 @@ SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
 
    return &result;
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable  I/O  DESCRIPTION
-   --------  ---  --------------------------------------------------
-   data       I   The simulation data which is fed into gfoclt_c.
-
-- Detailed_Input
-
-   data     a struct which contains the simulation data used in the
-            occultation analysis. The struct members include:
-
-               LowerBoundEpoch:  The epoch in TDB which begins the range.
-               UpperBoundEpoch   The epoch in TDB which ends the range.
-               StepSize          The step size in seconds.
-               OccultationType   The type of the occultation. The supported
-                                 values are outlined in gfoclt_c.c
-               OcculterDetails   A tuple containing the occulting object's
-                                 name, shape, and reference frame.
-               TargetDetails     A tuple containing the occulting object's
-                                 name, shape, and reference frame.
-               ObserverName      The name of the observing object.
-               Tolerance         The tolerance in seconds.
-
-- Detailed_Output
-
-   The function returns a SPICE window representing the set of time intervals,
-   within the confinement period, when the specified occultation occurs.
-
-   The endpoints of the time intervals comprising 'result' are interpreted as
-   seconds past J2000 TDB.
-
-- Error Handling
-
-   This function's error handling is performed by the CSPICE API.
-
-- Particulars
-
-   For more information, please see the CSPICE documentation for gfoclt_c.
-
-- Literature_References
-
-   CSPICE's documentation.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is the function which is used to results of the occultation search. The
@@ -818,130 +840,114 @@ void cppspice::reportSearchSummary( SpiceCell* result ) {
    SpiceInt    i{ 0 };
    SpiceDouble left{ 0.0 };
    SpiceDouble right{ 0.0 };
-   SpiceChar   beginEpoch[41];
-   SpiceChar   endEpoch[41];
+   SpiceChar   beginEpoch[TIMELEN];
+   SpiceChar   endEpoch[TIMELEN];
+   /*
+   - Brief I/O
+
+      Variable  I/O  DESCRIPTION
+      --------  ---  --------------------------------------------------
+      result     I   The results which have been output by gfoclt_c.
+
+   - Detailed_Input
+
+      result   a SpiceCell which contains the results of the occultation
+               analysis. This will be parsed and the results will be iterated
+               through so that the results can be reported.
+
+   - Detailed_Output
+
+      The function returns void.
+
+   - Error Handling
+
+      Any errors encountered in the CSPICE routines will be handled by
+   CSPICE's native error handling. Otherwise, error messages are reported, and
+   the function returns.
+
+   - Particulars
+
+      None.
+
+   - Literature_References
+
+      None.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      -Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
 
    /*
-   Check if we've received an interrupt signal.
+   First check if we actually have any results.
    */
-   if ( gfbail_c() ) {
-      /*
-      If we've gotten here, we've trapped an interrupt signal and are ready to
-      error out.
-      */
-      gfclrh_c();
-      std::cout << "Error: Search was interrupted." << std::endl;
+   if ( wncard_c( result ) == 0 ) {
+      std::cout
+         << "No occultations were found within the specified time window."
+         << std::endl;
    }
    else {
       /*
-      First check if we actually have any results.
+      Now we'll iterate through any/all results and report the information
+      in a user-friendly format.
       */
-      if ( wncard_c( result ) == 0 ) {
-         std::cout
-            << "No occultations were found within the specified time window."
-            << std::endl;
-      }
-      else {
+
+      std::ofstream out( "output.txt" );
+      for ( i = 0; i < wncard_c( result ); i++ ) {
          /*
-         Now we'll iterate through any/all results and report the information
-         in a user-friendly format.
+         First we'll need to fetch the interval so we can translate it into
+         a legible format.
          */
+         wnfetd_c( result, i, &left, &right );
 
-         std::ofstream out( "output.txt" );
-         for ( i = 0; i < wncard_c( result ); i++ ) {
-            /*
-            First we'll need to fetch the interval so we can translate it into
-            a legible format.
-            */
-            wnfetd_c( result, i, &left, &right );
+         /*
+         Take the lower bound and translate it into our common calendar
+         format.
+         */
+         timout_c(
+            left,
+            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+            TIMELEN,
+            beginEpoch );
+         /*
+         Now do the same with the upper bound.
+         */
+         timout_c(
+            right,
+            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
+            TIMELEN,
+            endEpoch );
 
-            /*
-            Take the lower bound and translate it into our common calendar
-            format.
-            */
-            timout_c(
-               left,
-               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-               41,
-               beginEpoch );
-            /*
-            Now do the same with the upper bound.
-            */
-            timout_c(
-               right,
-               "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-               41,
-               endEpoch );
+         /*
+         Finally report the interval information to console.
+         */
+         std::cout << "Interval " << i << std::endl;
+         std::cout << "   Start time: " << beginEpoch << std::endl;
+         std::cout << "   Stop time:  " << endEpoch << std::endl;
 
-            /*
-            Finally report the interval information to console.
-            */
-            std::cout << "Interval " << i << std::endl;
-            std::cout << "   Start time: " << beginEpoch << std::endl;
-            std::cout << "   Stop time:  " << endEpoch << std::endl;
-
-            /*
-            Also report to file.
-            */
-            out << "Interval " << i << std::endl;
-            out << "   Start time: " << beginEpoch << std::endl;
-            out << "   Stop time: " << endEpoch << std::endl;
-         }
-
-         out.close();
+         /*
+         Also report to file.
+         */
+         out << "Interval " << i << std::endl;
+         out << "   Start time: " << beginEpoch << std::endl;
+         out << "   Stop time: " << endEpoch << std::endl;
       }
+
+      out.close();
    }
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable  I/O  DESCRIPTION
-   --------  ---  --------------------------------------------------
-   result     I   The results which have been output by gfoclt_c.
-
-- Detailed_Input
-
-   result   a SpiceCell which contains the results of the occultation
-            analysis. This will be parsed and the results will be iterated
-            through so that the results can be reported.
-
-- Detailed_Output
-
-   The function returns void.
-
-- Error Handling
-
-   Any errors encountered in the CSPICE routines will be handled by CSPICE's
-   native error handling. Otherwise, error messages are reported, and the
-   function returns.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 /* End OccultationUtils.cpp */

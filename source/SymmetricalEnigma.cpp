@@ -68,6 +68,47 @@ This is the main function of this program.
 */
 int main() {
    /*
+   - Detailed_Input
+
+      none.
+
+   - Detailed_Output
+
+      Returns a status code in the form of an int.
+
+   - Error Handling
+
+      If a CSPICE routine encounters an error, the native CSPICE error handler
+   will be responsible for error handling. Otherwise, we report an error and
+   return an error code.
+
+   - Particulars
+
+      None.
+
+   - Literature_References
+
+      None.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
+   /*
    We'll query a few things here, so start off by initializing an input
    receiver string.
    */
@@ -85,7 +126,13 @@ int main() {
    /*
    For the sake of comparison, let's convert to uppercase.
    */
-   std::transform( input.begin(), input.end(), input.begin(), ::toupper );
+   std::transform(
+      input.begin(),
+      input.end(),
+      input.begin(),
+      []( unsigned char c ) {
+         return std::toupper( c );
+      } );
 
    /*
    Compare our input against the valid input types.
@@ -137,7 +184,6 @@ int main() {
    Initialize objects which are used across both forks here.
    */
    SimulationData data;
-   SpiceCell*     results;
    if ( definitionMode == DefinitionMode::CONSOLE ) {
       /*
       If we're working with console inputs, initialize the data here, and then
@@ -184,61 +230,18 @@ int main() {
    Finally, the moment we've all been waiting for: let's perform our search.
    */
    if ( algorithmChoice == AlgorithmChoice::CUSTOM ) {
-      cppspice::performCustOccSrch( std::move( data ) );
+      cppspice::performCustOccSrch( data );
    }
    else {
-      results = cppspice::performCSPICEOccSrch( std::move( data ) );
+      SpiceCell* results;
+      results = cppspice::performCSPICEOccSrch( data );
 
       /*
       Now that we have our results, we can go ahead and report the data.
       */
-      cppspice::reportSearchSummary( std::move( results ) );
+      cppspice::reportSearchSummary( results );
    }
 
    return 0;
 }
-// clang-format off
-/*
-
-- Detailed_Input
-
-   none.
-
-- Detailed_Output
-
-   Returns a status code in the form of an int.
-
-- Error Handling
-
-   If a CSPICE routine encounters an error, the native CSPICE error handler will
-   be responsible for error handling. Otherwise, we report an error and return an
-   error code.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 /* End SymmetricalEnigma.cpp */

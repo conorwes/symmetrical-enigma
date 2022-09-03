@@ -170,5 +170,14 @@ namespace cppspice {
    auto calculateMagnitude = []( const SpiceDouble* v ) -> SpiceDouble {
       return sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
    };
+
+   /*
+   Define some constants for readability
+   */
+   constexpr SpiceInt    EARTHID   = 399;
+   constexpr SpiceInt    ITERLIMIT = 4000;
+   constexpr SpiceInt    CELLSIZE  = 200;
+   constexpr SpiceInt    TIMELEN   = 41;
+   constexpr SpiceDouble STEPSIZE  = 0.1;
 }   // namespace cppspice
     /* End IncludesCommon.hpp */

@@ -64,6 +64,54 @@ Ultimately this just gets used for validation that we're working with real
 objects.
 */
 int cppspice::getNAIFIDFromName( const std::string& name ) {
+   /*
+   - Brief I/O
+
+      Variable  I/O  DESCRIPTION
+      --------  ---  --------------------------------------------------
+      name       I   The name of the object.
+
+   - Detailed_Input
+
+      name     the name of the object which will be queried.
+
+   - Detailed_Output
+
+      int      an int representing the NAIF ID corresponding to the
+               object whose name is provided as the argument.
+
+   - Error Handling
+
+      Any errors encountered by the CSPICE routine will be handled by the
+      CSPICE error handling. Otherwise, if no NAIF ID is found, this returns
+      -1.
+
+   - Particulars
+
+      None.
+
+   - Literature_References
+
+      None.
+
+   - Author
+
+      C.P. Westphal     (self)
+
+   - Credits
+
+      This file references the CSPICE API, which was developed by the NAIF at
+      JPL.
+
+   - Restrictions
+
+      None.
+
+   - Version
+
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    SpiceInt     code{ 0 };
    SpiceBoolean found{ false };
    bodn2c_c( name.c_str(), &code, &found );
@@ -78,57 +126,6 @@ int cppspice::getNAIFIDFromName( const std::string& name ) {
       return -1;
    }
 }
-// clang-format off
-/*
-
-- Brief I/O
-
-   Variable  I/O  DESCRIPTION
-   --------  ---  --------------------------------------------------
-   name       I   The name of the object.
-
-- Detailed_Input
-
-   name     the name of the object which will be queried.
-   
-- Detailed_Output
-
-   int      an int representing the NAIF ID corresponding to the
-            object whose name is provided as the argument.
-
-- Error Handling
-
-   Any errors encountered by the CSPICE routine will be handled by the
-   CSPICE error handling. Otherwise, if no NAIF ID is found, this returns
-   -1.
-
-- Particulars
-
-   None.
-
-- Literature_References
-
-   None.
-
-- Author
-
-   C.P. Westphal     (self)
-
-- Credits
-
-   This file references the CSPICE API, which was developed by the NAIF at
-   JPL.
-
-- Restrictions
-
-   None.
-
-- Version
-
-   -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This function is used to validate a specified date to ensure that we're
@@ -136,6 +133,36 @@ working with a valid epoch.
 */
 // TODO - expand capabilities to allow for arbitrary formats
 bool cppspice::isValidDate( const std::string& input ) {
+   /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The time to be analyzed.
+
+      - Detailed_Input
+
+         input     the string which contains the representation of the time
+                  that we are analyzing.
+
+      - Detailed_Output
+
+         bool     returns true if the time is valid.
+
+      - Error Handling
+
+         Any errors encountered by the CSPICE API are handled by the native
+      error handling. Otherwise, no other error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    /*
    Define some lambdas for clarity
    */
@@ -145,6 +172,34 @@ bool cppspice::isValidDate( const std::string& input ) {
    once, this is significantly cleaner than writing out the logic in situ.
    */
    auto isLeapYear = []( int year ) -> bool {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         int        I   The year in question.
+
+      - Detailed_Input
+
+         year     the year that we need to check for leap-year-ness.
+
+      - Detailed_Output
+
+         bool     returns true if the year is a leap year, false if not.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
+
       /*
       Any year divisible by 400 is a leap year.
       */
@@ -167,37 +222,6 @@ bool cppspice::isValidDate( const std::string& input ) {
 
       return false;
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      int        I   The year in question.
-
-   - Detailed_Input
-
-      year     the year that we need to check for leap-year-ness.
-
-   - Detailed_Output
-
-      bool     returns true if the year is a leap year, false if not.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    This lambda is used to check individual components of a time string (i.e.
@@ -206,6 +230,44 @@ bool cppspice::isValidDate( const std::string& input ) {
    auto isWithinTimeBounds = []( const std::string& input,
                                  const int          offset,
                                  const std::string& timeUnit ) {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The time string to be analyzed.
+         int        I   The offset from the beginning of the string which
+                        points to the unit we want to analyze.
+         string     I   The time unit that we want to analyze.
+
+      - Detailed_Input
+
+         input     the string which contains the representation of the time
+                  that we are analyzing.
+         offset    the offset from the beginning of the string which points
+                  to the position of the values corresponding to the unit
+                  we are analyzing.
+         timeUnit  the unit of time which we are analyzing, either hour,
+                  minute, or second.
+
+      - Detailed_Output
+
+         bool     returns true if the value is valid, or false if it is
+                  outside of the unit's bounds.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
+
       /*
       First retrieve the relevant time component that we're analysing by
       getting the string and then converting to an int.
@@ -240,47 +302,6 @@ bool cppspice::isValidDate( const std::string& input ) {
 
       return true;
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The time string to be analyzed.
-      int        I   The offset from the beginning of the string which
-                     points to the unit we want to analyze.
-      string     I   The time unit that we want to analyze.
-
-   - Detailed_Input
-
-      input     the string which contains the representation of the time
-                that we are analyzing.
-      offset    the offset from the beginning of the string which points
-                to the position of the values corresponding to the unit
-                we are analyzing.
-      timeUnit  the unit of time which we are analyzing, either hour,
-                minute, or second.
-
-   - Detailed_Output
-
-      bool     returns true if the value is valid, or false if it is
-               outside of the unit's bounds.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    The first step is ensuring that the date matches our date format regex.
@@ -364,43 +385,17 @@ bool cppspice::isValidDate( const std::string& input ) {
    bodn2c_c( "SUN", &targetID, &found );
    bodn2c_c( "EARTH", &observerID, &found );
 
-   spkez_c( targetID, inputDouble, "IAU_SUN", "LT", observerID, posVel, &lt );
+   spkez_c(
+      targetID,
+      inputDouble,
+      "IAU_SUN",
+      "NONE",
+      observerID,
+      posVel,
+      &lt );
 
    return true;
 }
-// clang-format off
-/*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The time to be analyzed.
-
-   - Detailed_Input
-
-      input     the string which contains the representation of the time
-                that we are analyzing.
-
-   - Detailed_Output
-
-      bool     returns true if the time is valid.
-
-   - Error Handling
-
-      Any errors encountered by the CSPICE API are handled by the native error
-      handling. Otherwise, no other error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This function is a second bit of date validation, namely to compare the
@@ -410,6 +405,37 @@ ready for comparison.
 bool cppspice::areValidDateBounds(
    const std::string& lowerDateBound,
    const std::string& upperDateBound ) {
+   /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The lower bound time to be analyzed.
+         string     I   The upper bound time to be analyzed.
+
+      - Detailed_Input
+
+         lowerDateBound  the string which contains the representation of the
+      time which is the lower bound of the time span. upperDateBound  the
+      string which contains the representation of the time which is the upper
+      bound of the time span.
+
+      - Detailed_Output
+
+         bool     returns true if the bounds are valid.
+
+      - Error Handling
+
+         None.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
 
    /*
    For the sake of comparison, convert the dates to doubles
@@ -438,47 +464,43 @@ bool cppspice::areValidDateBounds(
 
    return true;
 }
-// clang-format off
-/*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The lower bound time to be analyzed.
-      string     I   The upper bound time to be analyzed.
-
-   - Detailed_Input
-
-      lowerDateBound  the string which contains the representation of the time
-                        which is the lower bound of the time span.
-      upperDateBound  the string which contains the representation of the time
-                        which is the upper bound of the time span.
-
-   - Detailed_Output
-
-      bool     returns true if the bounds are valid.
-
-   - Error Handling
-
-      None.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is a helper function which queries users for a kernel, and then
 furnishes the kernel if it exists.
 */
 bool cppspice::furnishSPICEKernel( const std::string& kernelName ) {
+   /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The name of the kernel.
+
+      - Detailed_Input
+
+         kernelName  a string which contains the name of the kernel for the
+                     purpose of prompting the user.
+
+      - Detailed_Output
+
+         bool     returns false if the file cannot be found. otherwise returns
+                  true.
+
+      - Error Handling
+
+         Any errors encountered in the CSPICE API are handled using the native
+         CSPICE error handling.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    /*
    First prompt for the kernel path.
    */
@@ -506,40 +528,6 @@ bool cppspice::furnishSPICEKernel( const std::string& kernelName ) {
    furnsh_c( path.c_str() );
    return true;
 }
-// clang-format off
-/*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The name of the kernel.
-
-   - Detailed_Input
-
-      kernelName  a string which contains the name of the kernel for the
-                  purpose of prompting the user.
-
-   - Detailed_Output
-
-      bool     returns false if the file cannot be found. otherwise returns
-               true.
-
-   - Error Handling
-
-      Any errors encountered in the CSPICE API are handled using the native
-      CSPICE error handling.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is a function to query a user for body details for one of the
@@ -550,6 +538,40 @@ bool cppspice::queryParticipantDetails(
    const std::string&  participantType,
    ParticipantDetails& participantInfo,
    AlgorithmChoice&    choice ) {
+   /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   A string specifying the label of the participant.
+         tuple      O   A ParticipantDetails tuple which contains the
+                        information.
+
+      - Detailed_Input
+
+         participantType   a string which contains the label of the
+      participant for the purpose of prompting the user.
+
+      - Detailed_Output
+
+         participantInfo   a ParticipantDetails tuple which receives the
+      details and is then used in later analysis. bool              returns
+      false if any errors occur, otherwise returns true.
+
+      - Error Handling
+
+         Any errors encountered in the CSPICE API are handled using the native
+         CSPICE error handling.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
+
    /*
    First prompt for the body name.
    */
@@ -627,44 +649,6 @@ bool cppspice::queryParticipantDetails(
 
    return true;
 }
-// clang-format off
-/*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   A string specifying the label of the participant.
-      tuple      O   A ParticipantDetails tuple which contains the
-                     information.
-
-   - Detailed_Input
-
-      participantType   a string which contains the label of the participant
-                        for the purpose of prompting the user.
-
-   - Detailed_Output
-
-      participantInfo   a ParticipantDetails tuple which receives the details
-                        and is then used in later analysis.
-      bool              returns false if any errors occur, otherwise returns 
-                        true.
-
-   - Error Handling
-
-      Any errors encountered in the CSPICE API are handled using the native
-      CSPICE error handling.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
 
 /*
 This is a utility to query a user for all of the user-specified components
@@ -674,7 +658,39 @@ SimulationData which then gets fed into our occultation analysis.
 bool cppspice::queryConfigDetails(
    SimulationData&  data,
    AlgorithmChoice& choice ) {
+   /*
+      - Brief I/O
 
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         struct     O   A SimulationData struct for use in occultation
+                        analysis.
+
+      - Detailed_Input
+
+         None.
+
+      - Detailed_Output
+
+         data              a SimulationData struct which gets populated
+                           using user input. This struct is later used
+                           in occultation analysis.
+         bool              returns false if any errors occur, otherwise
+      returns true.
+
+      - Error Handling
+
+         Any errors encountered in the CSPICE API are handled using the native
+         CSPICE error handling.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
    std::string input{ "" };
 
    /*
@@ -811,27 +827,37 @@ bool cppspice::queryConfigDetails(
    */
    return true;
 }
-// clang-format off
-/*
 
+/*
+This utility queries the user for a configuration file, which is then
+parsed. The data retrieved from the configuration file is fed into a
+SimulationData object, which is then used in the occulation analysis.
+*/
+bool cppspice::parseConfigFile(
+   const std::string& filename,
+   SimulationData&    data ) {
+   /*
    - Brief I/O
 
       Variable  I/O  DESCRIPTION
       --------  ---  --------------------------------------------------
-      struct     O   A SimulationData struct for use in occultation
-                     analysis.
+      string     I   A string containing the name of the file to parse.
+      struct     O   A SimulationData struct containing the data used in
+                     occultation analysis.
 
    - Detailed_Input
 
-      None.
+      filename       a string containing the filename of the configuration
+                     file which will be parsed to populate the
+                     SimulationData struct we'll use elsewhere.
 
    - Detailed_Output
 
       data              a SimulationData struct which gets populated
-                        using user input. This struct is later used
+                        using file input. This struct is later used
                         in occultation analysis.
-      bool              returns false if any errors occur, otherwise returns 
-                        true.
+      bool              returns false if any errors occur, otherwise
+   returns true.
 
    - Error Handling
 
@@ -844,19 +870,9 @@ bool cppspice::queryConfigDetails(
 
    - Version
 
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
+      Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
 */
-// clang-format on
-
-/*
-This utility queries the user for a configuration file, which is then
-parsed. The data retrieved from the configuration file is fed into a
-SimulationData object, which is then used in the occulation analysis.
-*/
-bool cppspice::parseConfigFile(
-   const std::string& filename,
-   SimulationData&    data ) {
 
    /*
    Define some helpful lambdas for I/O.
@@ -865,48 +881,71 @@ bool cppspice::parseConfigFile(
    Just a simple lambda to trim whitespace from the left side of a string.
    */
    auto trimLeft = []( std::string& s ) -> void {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The string to trim
+
+      - Detailed_Input
+
+         s        the string that should have whitespace trimmed.
+
+      - Detailed_Output
+
+         void     returns void.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
       s.erase(
          s.begin(),
          std::find_if( s.begin(), s.end(), []( unsigned char ch ) {
             return !std::isspace( ch );
          } ) );
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The string to trim
-
-   - Detailed_Input
-
-      s        the string that should have whitespace trimmed.
-
-   - Detailed_Output
-
-      void     returns void.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    A lambda to trim whitespace from the right side of a string.
    */
    auto trimRight = []( std::string& s ) -> void {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The string to trim
+
+      - Detailed_Input
+
+         s        the string that should have whitespace trimmed.
+
+      - Detailed_Output
+
+         void     returns void.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
       s.erase(
          std::find_if(
             s.rbegin(),
@@ -917,82 +956,75 @@ bool cppspice::parseConfigFile(
             .base(),
          s.end() );
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The string to trim
-
-   - Detailed_Input
-
-      s        the string that should have whitespace trimmed.
-
-   - Detailed_Output
-
-      void     returns void.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    This lambda combines the two previous lambdas to trim whitespace from
    both sides of a string.
    */
    auto trim = [trimLeft, trimRight]( std::string& s ) -> void {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The string to trim
+
+      - Detailed_Input
+
+         s        the string that should have whitespace trimmed.
+
+      - Detailed_Output
+
+         void     returns void.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
       trimLeft( s );
       trimRight( s );
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The string to trim
-
-   - Detailed_Input
-
-      s        the string that should have whitespace trimmed.
-
-   - Detailed_Output
-
-      void     returns void.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    This lambda compares a specified string against the valid shape types.
    */
    auto isValidShapeType = []( std::string& s ) -> bool {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The shape type to validate.
+
+      - Detailed_Input
+
+         s        the string that represents the shape type which is to be
+                  validated.
+
+      - Detailed_Output
+
+         bool     returns true if the shape type is valid.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
       auto shapeIterator = std::find_if(
          validShapeTypes.begin(),
          validShapeTypes.end(),
@@ -1007,43 +1039,39 @@ bool cppspice::parseConfigFile(
       };
       return true;
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The shape type to validate.
-
-   - Detailed_Input
-
-      s        the string that represents the shape type which is to be
-               validated.
-
-   - Detailed_Output
-
-      bool     returns true if the shape type is valid.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    This lambda validates a frame ID using the CSPICE API.
    */
    auto isValidBodyFrame = []( std::string& s ) -> bool {
+      /*
+      - Brief I/O
+
+         Variable  I/O  DESCRIPTION
+         --------  ---  --------------------------------------------------
+         string     I   The body frame to validate
+
+      - Detailed_Input
+
+         s        the string that represents the frame ID which is to be
+                  validated.
+
+      - Detailed_Output
+
+         bool     returns true if the frame ID is valid.
+
+      - Error Handling
+
+         No error handling is required.
+
+      - Author
+
+         C.P. Westphal     (self)
+
+      - Version
+
+         Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      */
       SpiceInt frameCode{ 0 };
       namfrm_c( s.c_str(), &frameCode );
       if ( frameCode == 0 ) {
@@ -1053,38 +1081,6 @@ bool cppspice::parseConfigFile(
       }
       return true;
    };
-   // clang-format off
-   /*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string     I   The body frame to validate
-
-   - Detailed_Input
-
-      s        the string that represents the frame ID which is to be
-               validated.
-
-   - Detailed_Output
-
-      bool     returns true if the frame ID is valid.
-
-   - Error Handling
-
-      No error handling is required.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-   */
-   // clang-format on
 
    /*
    The first step is parsing the file. We can assume that the filename has
@@ -1284,35 +1280,31 @@ bool cppspice::parseConfigFile(
    */
    return true;
 }
-// clang-format off
-/*
 
+/*
+This is a simple utility to take relative paths and ensure that they are
+translated to the correct path.
+*/
+void cppspice::disambigRelPath( std::string& path ) {
+   /*
    - Brief I/O
 
       Variable  I/O  DESCRIPTION
       --------  ---  --------------------------------------------------
-      string     I   A string containing the name of the file to parse.
-      struct     O   A SimulationData struct containing the data used in
-                     occultation analysis.
+      string    I/O   A string containing the relative path.
 
    - Detailed_Input
 
-      filename       a string containing the filename of the configuration
-                     file which will be parsed to populate the 
-                     SimulationData struct we'll use elsewhere.     
+      path        a string containing the relative path which we want to
+                  disambiguate.
 
    - Detailed_Output
 
-      data              a SimulationData struct which gets populated
-                        using file input. This struct is later used
-                        in occultation analysis.
-      bool              returns false if any errors occur, otherwise returns 
-                        true.
+      void.
 
    - Error Handling
 
-      Any errors encountered in the CSPICE API are handled using the native
-      CSPICE error handling.
+      None.
 
    - Author
 
@@ -1320,16 +1312,10 @@ bool cppspice::parseConfigFile(
 
    - Version
 
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+      Symmetrical-Enigma Version 1.X.X, 03-SEP-2022 (CPW)
+      Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
+   */
 
-*/
-// clang-format on
-
-/*
-This is a simple utility to take relative paths and ensure that they are
-translated to the correct path.
-*/
-void cppspice::disambigRelPath( std::string& path ) {
    /*
    If the path starts with a period, we're using a relative path. We'll
    then go ahead and concatenate the working directory and the relative
@@ -1362,35 +1348,4 @@ void cppspice::disambigRelPath( std::string& path ) {
       }
    }
 }
-// clang-format off
-/*
-
-   - Brief I/O
-
-      Variable  I/O  DESCRIPTION
-      --------  ---  --------------------------------------------------
-      string    I/O   A string containing the relative path.
-
-   - Detailed_Input
-
-      path        a string containing the relative path which we want to
-                  disambiguate.    
-
-   - Detailed_Output
-
-      void.
-
-   - Error Handling
-
-      None.
-
-   - Author
-
-      C.P. Westphal     (self)
-
-   - Version
-
-      -Symmetrical-Enigma Version 1.0.0, 28-AUG-2022 (CPW)
-
-*/
-// clang-format on
+/* End SupportUtils.cpp */
