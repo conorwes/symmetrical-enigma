@@ -146,7 +146,7 @@ bool cppspice::isOccultedAtEpoch(
       observerID,
       epoch,
       "j2000",
-      "NONE",
+      "LT",
       EARTHID,
       earthToObserverJ2000,
       &lt );
@@ -159,7 +159,7 @@ bool cppspice::isOccultedAtEpoch(
       occulterID,
       epoch,
       "j2000",
-      "NONE",
+      "LT",
       EARTHID,
       earthToOcculterJ2000,
       &lt );
@@ -183,7 +183,7 @@ bool cppspice::isOccultedAtEpoch(
       targetID,
       epoch,
       "j2000",
-      "NONE",
+      "LT",
       EARTHID,
       earthToTargetJ2000,
       &lt );
@@ -823,7 +823,7 @@ SpiceCell* cppspice::performCSPICEOccSrch( const SimulationData& data ) {
       std::get<0>( data.TargetDetails ).c_str(),
       std::get<1>( data.TargetDetails ).c_str(),
       std::get<2>( data.TargetDetails ).c_str(),
-      "NONE",
+      "LT",
       data.ObserverName.c_str(),
       data.StepSize,
       &cnfine,
