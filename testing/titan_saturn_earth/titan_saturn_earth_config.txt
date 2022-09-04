@@ -10,7 +10,7 @@ UpperBoundEpoch: 2009 JAN 01 00:00:00 TDB
 StepSize: 10.0
 
 // Simulation Data
-OccultationType: ANNULAR
+OccultationType: ANY
 OccultingBody: TITAN
 OccultingBodyShape: ELLIPSOID
 OccultingBodyFrame: IAU_TITAN
