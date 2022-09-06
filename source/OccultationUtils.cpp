@@ -500,11 +500,7 @@ bool cppspice::bisectEpochs(
             << ( !leftOcculted && rightOcculted ? "Occultation started: "
                                                 : "Occultation ended: " );
          SpiceChar timeOut[TIMELEN];
-         timout_c(
-            ( left + right ) / 2,
-            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-            TIMELEN,
-            timeOut );
+         timout_c( ( left + right ) / 2, TIMEFORMAT, TIMELEN, timeOut );
          std::cout << timeOut << std::endl;
       }
       else if ( numIterations >= ITERLIMIT ) {
@@ -514,16 +510,8 @@ bool cppspice::bisectEpochs(
          */
          SpiceChar lowerText[TIMELEN];
          SpiceChar upperText[TIMELEN];
-         timout_c(
-            left,
-            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-            TIMELEN,
-            lowerText );
-         timout_c(
-            right,
-            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-            TIMELEN,
-            upperText );
+         timout_c( left, TIMEFORMAT, TIMELEN, lowerText );
+         timout_c( right, TIMEFORMAT, TIMELEN, upperText );
          std::cout << "Error: unable to find the transition between '"
                    << lowerText << "' and '" << upperText << "'."
                    << std::endl;
@@ -918,19 +906,11 @@ void cppspice::reportSearchSummary( SpiceCell* result ) {
          Take the lower bound and translate it into our common calendar
          format.
          */
-         timout_c(
-            left,
-            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-            TIMELEN,
-            beginEpoch );
+         timout_c( left, TIMEFORMAT, TIMELEN, beginEpoch );
          /*
          Now do the same with the upper bound.
          */
-         timout_c(
-            right,
-            "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)",
-            TIMELEN,
-            endEpoch );
+         timout_c( right, TIMEFORMAT, TIMELEN, endEpoch );
 
          /*
          Finally report the interval information to console.

@@ -179,5 +179,7 @@ namespace cppspice {
    constexpr SpiceInt    CELLSIZE  = 200;
    constexpr SpiceInt    TIMELEN   = 41;
    constexpr SpiceDouble STEPSIZE  = 0.1;
+   constexpr SpiceChar*  TIMEFORMAT =
+      "YYYY MON DD HR:MN:SC.###### ::TDB (TDB)";
 }   // namespace cppspice
     /* End IncludesCommon.hpp */
